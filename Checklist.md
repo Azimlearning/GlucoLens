@@ -297,10 +297,10 @@ This is the **execution checklist** for the GlucoLens build. Tick each box as co
 - [ ] Dark mode (optional, only if time permits)
 
 ### Data Quality
-- [ ] Re-run `scripts/seed_firestore.py` and verify all data appears correctly
-- [ ] Verify Rahman's seed meal history shows realistic variety (not all nasi lemak)
-- [ ] Verify glucose seed data has plausible post-meal spikes
-- [ ] Verify 3+ misinfo queries seeded for Aisyah's drilldown view
+- [x] Re-run `scripts/seed_firestore.py` and verify all data appears correctly
+- [x] Verify Rahman's seed meal history shows realistic variety (not all nasi lemak)
+- [x] Verify glucose seed data has plausible post-meal spikes
+- [x] Verify 3+ misinfo queries seeded for Aisyah's drilldown view
 
 ---
 

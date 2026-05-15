@@ -1,16 +1,15 @@
 import { Card } from "@/components/shared/Card"
 import { Spinner } from "@/components/shared/Spinner"
 import { useMealHistory } from "@/hooks/useMealHistory"
+import { usePatientProfile } from "@/hooks/usePatientProfile"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine,
-  ResponsiveContainer, Legend,
+  ResponsiveContainer,
 } from "recharts"
 import type { MealRecord } from "@/lib/types"
 
 interface Props {
   uid: string
-  dailyCalTarget?: number
-  dailyCarbTarget?: number
 }
 
 function getMealKcal(m: MealRecord): number {
@@ -64,8 +63,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   )
 }
 
-export function NutritionHistoryCard({ uid, dailyCalTarget = 1800, dailyCarbTarget = 130 }: Props) {
+export function NutritionHistoryCard({ uid }: Props) {
   const { meals, loading } = useMealHistory(uid, 60)
+  const { profile } = usePatientProfile(uid)
+  const dailyCalTarget  = profile?.daily_calorie_target  ?? 1800
+  const dailyCarbTarget = profile?.daily_carb_target_g   ?? 130
   const chartData = buildChartData(meals)
 
   const todayRow = chartData[chartData.length - 1]
@@ -148,7 +150,7 @@ export function NutritionHistoryCard({ uid, dailyCalTarget = 1800, dailyCarbTarg
           </div>
 
           <p className="text-xs text-slate-300 mt-2 text-center">
-            Targets: {dailyCalTarget} kcal · {dailyCarbTarget}g carbs (MOH T2D guidelines)
+            Your targets: {dailyCalTarget} kcal · {dailyCarbTarget}g carbs/day
           </p>
         </>
       )}

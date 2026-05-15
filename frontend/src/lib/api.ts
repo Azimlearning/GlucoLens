@@ -28,7 +28,14 @@ apiClient.interceptors.response.use(
 
 export const api = {
   uploadMeal: (imageBase64: string, mealType?: string) =>
-    apiClient.post("/meals/upload", { image_base64: imageBase64, meal_type: mealType ?? "unspecified" }),
+    apiClient.post("/meals/upload", { image_base64: imageBase64, meal_type: mealType ?? "unspecified", dry_run: true }),
+
+  confirmMeal: (payload: {
+    meal_name: string; meal_type: string
+    nutrition_totals: Record<string, number>; meal_items: unknown[]
+    traffic_light: Record<string, string>; risk_score: number
+    recommendations: string[]; drug_interactions: unknown[]; applied_swaps: string[]
+  }) => apiClient.post("/meals/confirm", payload),
 
   getMeal: (mealId: string) =>
     apiClient.get(`/meals/${mealId}`),

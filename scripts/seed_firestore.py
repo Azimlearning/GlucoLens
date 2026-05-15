@@ -9,9 +9,8 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from backend.config import settings  # noqa: F401 — triggers .env load
-from backend.tools.firebase_tools import firestore_set, firestore_client, _init_app
-from firebase_admin import auth
+from backend.tools.firebase_tools import firestore_set, _init_app  # also loads .env via backend.config
+from firebase_admin import auth  # type: ignore[import]
 
 NOW = datetime.now(timezone.utc)
 
@@ -67,7 +66,7 @@ def seed_users():
 
 
 def seed_patient_profile():
-    firestore_set("patients/uid_rahman/profile", "main", {
+    profile_data = {
         "uid": "uid_rahman",
         "name": "Rahman bin Abdullah",
         "age": 52,
@@ -83,7 +82,11 @@ def seed_patient_profile():
         "daily_carb_target_g": 200,
         "dietitian_id": "uid_aisyah",
         "updated_at": NOW.isoformat(),
-    })
+    }
+    # Write to subcollection (canonical location for app reads)
+    firestore_set("patients/uid_rahman/profile", "main", profile_data)
+    # Write root document so dietitian caseload query (where dietitian_id == ...) can find it
+    firestore_set("patients", "uid_rahman", profile_data)
     print("✓ Patient profile seeded")
 
 
@@ -162,7 +165,7 @@ def seed_glucose():
 
 
 def seed_meiling_profile():
-    firestore_set("patients/uid_meiling/profile", "main", {
+    meiling_profile = {
         "uid": "uid_meiling",
         "name": "Mei Ling Tan",
         "age": 45,
@@ -176,9 +179,11 @@ def seed_meiling_profile():
         "allergens": ["shellfish"],
         "daily_calorie_target": 1600,
         "daily_carb_target_g": 150,
-        "assigned_dietitian": "uid_aisyah",
+        "dietitian_id": "uid_aisyah",
         "updated_at": NOW.isoformat(),
-    })
+    }
+    firestore_set("patients/uid_meiling/profile", "main", meiling_profile)
+    firestore_set("patients", "uid_meiling", meiling_profile)
     # Seed 5 recent meals for Mei Ling
     ml_meals = [
         {
@@ -235,11 +240,113 @@ def seed_meiling_profile():
     print("✓ Mei Ling profile, meals, and glucose seeded")
 
 
+def seed_misinfo_queries():
+    queries = [
+        {
+            "claim_text": "TikTok says bitter gourd juice can replace metformin for Type 2 diabetes",
+            "verdict": "harmful_for_you",
+            "evidence_summary": (
+                "No clinical evidence supports replacing prescribed metformin with bitter gourd. "
+                "Combined with Rahman's gliclazide, bitter gourd may cause dangerous hypoglycaemia. "
+                "This is my suggestion based on available evidence — please refer to your dietitian or doctor before changing your diet, supplements, or medications."
+            ),
+            "seen_by_dietitian": False,
+        },
+        {
+            "claim_text": "Facebook post: cinnamon can lower blood sugar and cure diabetes",
+            "verdict": "caution",
+            "evidence_summary": (
+                "Limited evidence shows cinnamon may modestly reduce fasting glucose, but results are inconsistent. "
+                "It does not cure diabetes and should not replace medication. Safe as a cooking spice in normal quantities. "
+                "This is my suggestion based on available evidence — please refer to your dietitian or doctor before changing your diet, supplements, or medications."
+            ),
+            "seen_by_dietitian": True,
+        },
+        {
+            "claim_text": "My friend says I should eat absolutely no rice to control blood sugar",
+            "verdict": "caution",
+            "evidence_summary": (
+                "Complete rice elimination is not required. MOH recommends portion control and lower-GI alternatives "
+                "(brown rice, basmati). Sudden carb elimination can cause energy dips and is harder to sustain. "
+                "This is my suggestion based on available evidence — please refer to your dietitian or doctor before changing your diet, supplements, or medications."
+            ),
+            "seen_by_dietitian": True,
+        },
+        {
+            "claim_text": "WhatsApp message: coconut oil is a superfood that reverses diabetes",
+            "verdict": "contradicted_by_evidence",
+            "evidence_summary": (
+                "Coconut oil is high in saturated fat. No peer-reviewed evidence supports its use for reversing diabetes. "
+                "Excessive intake may worsen cardiovascular risk, which is already elevated in T2D. "
+                "This is my suggestion based on available evidence — please refer to your dietitian or doctor before changing your diet, supplements, or medications."
+            ),
+            "seen_by_dietitian": False,
+        },
+    ]
+    for i, q in enumerate(queries):
+        query_id = str(uuid.uuid4())
+        ts = (NOW - timedelta(days=len(queries) - i)).replace(hour=14, minute=30, second=0).isoformat()
+        firestore_set("patients/uid_rahman/misinfo_log", query_id, {
+            "query_id": query_id,
+            "patient_id": "uid_rahman",
+            "timestamp": ts,
+            **q,
+        })
+    print("✓ Misinfo queries seeded (4 entries)")
+
+
+def seed_alerts():
+    alerts = [
+        {
+            "type": "meal_risk",
+            "severity": "critical",
+            "message": "Roti Canai + Teh Tarik scored 82/100 risk — 95g carbs exceeds daily target by 47%.",
+            "read": False,
+        },
+        {
+            "type": "glucose_spike",
+            "severity": "high",
+            "message": "Post-meal glucose reading of 11.2 mmol/L detected — above the 10.0 mmol/L post-meal threshold.",
+            "read": False,
+        },
+        {
+            "type": "meal_risk",
+            "severity": "medium",
+            "message": "Nasi Lemak scored 65/100 risk — sodium 920mg, consider swap to reduce saturated fat.",
+            "read": True,
+        },
+        {
+            "type": "medication_interaction",
+            "severity": "high",
+            "message": "Potential interaction: bitter gourd + gliclazide may cause hypoglycaemia. Review misinfo query.",
+            "read": False,
+        },
+        {
+            "type": "meal_risk",
+            "severity": "medium",
+            "message": "Char Kway Teow sodium (1350mg) is 56% of daily sodium limit in a single meal.",
+            "read": True,
+        },
+    ]
+    for i, alert in enumerate(alerts):
+        alert_id = str(uuid.uuid4())
+        ts = (NOW - timedelta(days=len(alerts) - i - 1)).replace(hour=13, minute=0, second=0).isoformat()
+        firestore_set("patients/uid_rahman/alerts", alert_id, {
+            "alert_id": alert_id,
+            "patient_id": "uid_rahman",
+            "timestamp": ts,
+            **alert,
+        })
+    print("✓ Alerts seeded (5 entries)")
+
+
 if __name__ == "__main__":
     seed_users()
     seed_patient_profile()
     seed_meals()
     seed_glucose()
+    seed_misinfo_queries()
+    seed_alerts()
     seed_meiling_profile()
     print("\n✅ Seed complete")
     print("   Demo accounts:")

@@ -8,6 +8,19 @@ from pydantic import BaseModel, Field
 class MealUploadRequest(BaseModel):
     image_base64: str = Field(..., description="Base64-encoded JPG/PNG image bytes (no data: prefix).")
     meal_type: str = Field("unspecified", description="breakfast | lunch | dinner | snack | unspecified")
+    dry_run: bool = Field(True, description="If True, analyse only — do not persist to Firestore. Call /meals/confirm to save.")
+
+
+class MealConfirmRequest(BaseModel):
+    meal_name: str = Field(..., description="Human-readable meal name derived from items.")
+    meal_type: str = Field("unspecified")
+    nutrition_totals: dict = Field(..., description="Possibly adjusted nutrition totals.")
+    meal_items: list = Field(default_factory=list)
+    traffic_light: dict = Field(default_factory=dict)
+    risk_score: float = Field(0)
+    recommendations: list = Field(default_factory=list)
+    drug_interactions: list = Field(default_factory=list)
+    applied_swaps: list[str] = Field(default_factory=list, description="Swap suggestions the patient applied.")
 
 
 class GlucoseEntryRequest(BaseModel):

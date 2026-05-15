@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status as http_status
 from backend.middleware.auth import verify_firebase_jwt
-from backend.models.requests import MealUploadRequest
+from backend.models.requests import MealUploadRequest, MealConfirmRequest
 from backend.models.responses import MealUploadResponse
 from backend.agents.orchestrator import run_pipeline
 from backend.tools import firebase_tools
@@ -27,8 +27,8 @@ async def upload_meal(body: MealUploadRequest, user: dict = Depends(verify_fireb
     enriched_items = result.get("nutrition_per_item") or result.get("meal_items") or []
     nutrition_totals = result.get("nutrition_totals") or {}
 
-    # Persist meal to Firestore so MealHistory can display it
-    if enriched_items:
+    # Persist to Firestore only when not a dry run
+    if not body.dry_run and enriched_items:
         meal_id = str(uuid.uuid4())
         meal_name = ", ".join(
             it.get("name", "?") for it in enriched_items[:3] if it.get("name")
@@ -84,3 +84,30 @@ async def delete_meal(meal_id: str, user: dict = Depends(verify_firebase_jwt)):
     uid = user["uid"]
     db = firebase_tools.firestore_client()
     db.collection("patients").document(uid).collection("meals").document(meal_id).delete()
+
+
+@router.post("/confirm")
+async def confirm_meal(body: MealConfirmRequest, user: dict = Depends(verify_firebase_jwt)):
+    """Save a previously analysed (dry-run) meal to Firestore after patient confirms."""
+    uid = user["uid"]
+    meal_id = str(uuid.uuid4())
+    totals = body.nutrition_totals
+    meal_doc = {
+        "meal_id":        meal_id,
+        "patient_id":     uid,
+        "timestamp":      now_iso(),
+        "name":           body.meal_name or "Meal",
+        "meal_type":      body.meal_type,
+        "traffic_light":  body.traffic_light,
+        "risk_score":     body.risk_score,
+        "meal_risk_score": body.risk_score,
+        "calories":       round(totals.get("calories_kcal", 0)),
+        "carbs_g":        round(totals.get("carbs_g", 0)),
+        "nutrition_totals": totals,
+        "meal_items":     body.meal_items,
+        "recommendations": body.recommendations,
+        "drug_interactions": body.drug_interactions,
+        "swap_suggestions": body.applied_swaps,
+    }
+    firebase_tools.write_patient_meal(uid, meal_id, meal_doc)
+    return {"success": True, "meal_id": meal_id}
