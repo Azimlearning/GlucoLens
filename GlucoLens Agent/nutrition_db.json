@@ -1,0 +1,242 @@
+{
+  "nasi_lemak": {
+    "name_display": "Nasi Lemak",
+    "per_100g": {"calories_kcal": 295, "carbs_g": 38, "protein_g": 6, "fat_g": 13, "fiber_g": 1.5, "sodium_mg": 380},
+    "glycemic_index": 78,
+    "category": "rice_dish",
+    "components": ["coconut_rice", "sambal", "anchovies", "peanuts", "egg", "cucumber"],
+    "myfcd_id": "MFCD-0142"
+  },
+  "char_kuey_teow": {
+    "name_display": "Char Kuey Teow",
+    "per_100g": {"calories_kcal": 220, "carbs_g": 30, "protein_g": 8, "fat_g": 8, "fiber_g": 1.2, "sodium_mg": 720},
+    "glycemic_index": 75,
+    "category": "noodle_dish",
+    "components": ["flat_rice_noodles", "prawns", "cockles", "chives", "bean_sprouts", "egg"],
+    "myfcd_id": "MFCD-0211"
+  },
+  "roti_canai_plain": {
+    "name_display": "Roti Canai (Plain)",
+    "per_100g": {"calories_kcal": 310, "carbs_g": 42, "protein_g": 7, "fat_g": 13, "fiber_g": 1.0, "sodium_mg": 420},
+    "glycemic_index": 80,
+    "category": "bread",
+    "components": ["flour", "ghee", "dal_curry"],
+    "myfcd_id": "MFCD-0301"
+  },
+  "roti_canai_telur": {
+    "name_display": "Roti Canai Telur",
+    "per_100g": {"calories_kcal": 335, "carbs_g": 40, "protein_g": 11, "fat_g": 15, "fiber_g": 1.0, "sodium_mg": 480},
+    "glycemic_index": 78,
+    "category": "bread",
+    "components": ["flour", "egg", "ghee", "dal_curry"],
+    "myfcd_id": "MFCD-0302"
+  },
+  "nasi_goreng_kampung": {
+    "name_display": "Nasi Goreng Kampung",
+    "per_100g": {"calories_kcal": 245, "carbs_g": 35, "protein_g": 7, "fat_g": 9, "fiber_g": 1.4, "sodium_mg": 680},
+    "glycemic_index": 74,
+    "category": "rice_dish",
+    "components": ["rice", "anchovies", "kangkung", "egg", "chilli"],
+    "myfcd_id": "MFCD-0155"
+  },
+  "mee_goreng_mamak": {
+    "name_display": "Mee Goreng Mamak",
+    "per_100g": {"calories_kcal": 235, "carbs_g": 32, "protein_g": 9, "fat_g": 9, "fiber_g": 1.6, "sodium_mg": 750},
+    "glycemic_index": 70,
+    "category": "noodle_dish",
+    "components": ["yellow_noodles", "tofu", "potato", "egg", "tomato_sauce"],
+    "myfcd_id": "MFCD-0221"
+  },
+  "laksa_penang": {
+    "name_display": "Laksa Penang (Asam Laksa)",
+    "per_100g": {"calories_kcal": 95, "carbs_g": 15, "protein_g": 5, "fat_g": 2, "fiber_g": 1.2, "sodium_mg": 620},
+    "glycemic_index": 58,
+    "category": "noodle_dish",
+    "components": ["rice_noodles", "mackerel", "tamarind_broth", "pineapple", "mint"],
+    "myfcd_id": "MFCD-0231"
+  },
+  "laksa_sarawak": {
+    "name_display": "Laksa Sarawak",
+    "per_100g": {"calories_kcal": 155, "carbs_g": 18, "protein_g": 7, "fat_g": 6, "fiber_g": 0.8, "sodium_mg": 690},
+    "glycemic_index": 65,
+    "category": "noodle_dish",
+    "components": ["rice_vermicelli", "prawns", "chicken", "coconut_milk", "spice_paste"],
+    "myfcd_id": "MFCD-0232"
+  },
+  "satay_chicken": {
+    "name_display": "Satay (Chicken)",
+    "per_100g": {"calories_kcal": 215, "carbs_g": 6, "protein_g": 22, "fat_g": 12, "fiber_g": 0.5, "sodium_mg": 480},
+    "glycemic_index": 35,
+    "category": "protein_dish",
+    "components": ["chicken", "peanut_sauce", "marinade"],
+    "myfcd_id": "MFCD-0411"
+  },
+  "curry_mee": {
+    "name_display": "Curry Mee",
+    "per_100g": {"calories_kcal": 165, "carbs_g": 18, "protein_g": 6, "fat_g": 7, "fiber_g": 1.4, "sodium_mg": 710},
+    "glycemic_index": 67,
+    "category": "noodle_dish",
+    "components": ["yellow_noodles", "rice_vermicelli", "coconut_milk", "tofu_puffs", "cockles"],
+    "myfcd_id": "MFCD-0241"
+  },
+  "hokkien_mee": {
+    "name_display": "Hokkien Mee (KL style)",
+    "per_100g": {"calories_kcal": 195, "carbs_g": 26, "protein_g": 8, "fat_g": 7, "fiber_g": 1.0, "sodium_mg": 760},
+    "glycemic_index": 68,
+    "category": "noodle_dish",
+    "components": ["thick_yellow_noodles", "pork", "prawns", "dark_soy_sauce", "pork_lard"],
+    "myfcd_id": "MFCD-0251"
+  },
+  "wantan_mee": {
+    "name_display": "Wantan Mee",
+    "per_100g": {"calories_kcal": 185, "carbs_g": 25, "protein_g": 9, "fat_g": 6, "fiber_g": 1.1, "sodium_mg": 690},
+    "glycemic_index": 65,
+    "category": "noodle_dish",
+    "components": ["thin_egg_noodles", "char_siu", "dumplings", "soy_sauce", "leafy_greens"],
+    "myfcd_id": "MFCD-0261"
+  },
+  "chicken_rice": {
+    "name_display": "Chicken Rice (Hainanese)",
+    "per_100g": {"calories_kcal": 205, "carbs_g": 28, "protein_g": 11, "fat_g": 6, "fiber_g": 0.6, "sodium_mg": 540},
+    "glycemic_index": 73,
+    "category": "rice_dish",
+    "components": ["rice", "poached_chicken", "ginger_garlic", "soy_sauce", "cucumber"],
+    "myfcd_id": "MFCD-0166"
+  },
+  "mixed_rice_avg": {
+    "name_display": "Mixed Rice (Average)",
+    "per_100g": {"calories_kcal": 175, "carbs_g": 24, "protein_g": 9, "fat_g": 6, "fiber_g": 1.3, "sodium_mg": 580},
+    "glycemic_index": 70,
+    "category": "rice_dish",
+    "components": ["rice", "mixed_lauk", "vegetables"],
+    "myfcd_id": "MFCD-0177"
+  },
+  "economy_rice_avg": {
+    "name_display": "Economy Rice (Chap Fan)",
+    "per_100g": {"calories_kcal": 180, "carbs_g": 25, "protein_g": 8, "fat_g": 6, "fiber_g": 1.4, "sodium_mg": 590},
+    "glycemic_index": 70,
+    "category": "rice_dish",
+    "components": ["rice", "mixed_lauk", "stir_fried_vegetables"],
+    "myfcd_id": "MFCD-0178"
+  },
+  "kuih_lapis": {
+    "name_display": "Kuih Lapis",
+    "per_100g": {"calories_kcal": 245, "carbs_g": 35, "protein_g": 2, "fat_g": 11, "fiber_g": 0.5, "sodium_mg": 80},
+    "glycemic_index": 72,
+    "category": "kuih",
+    "components": ["rice_flour", "coconut_milk", "sugar", "food_colouring"],
+    "myfcd_id": "MFCD-0501"
+  },
+  "kuih_seri_muka": {
+    "name_display": "Kuih Seri Muka",
+    "per_100g": {"calories_kcal": 260, "carbs_g": 36, "protein_g": 4, "fat_g": 11, "fiber_g": 0.6, "sodium_mg": 90},
+    "glycemic_index": 70,
+    "category": "kuih",
+    "components": ["glutinous_rice", "coconut_milk", "pandan", "egg", "sugar"],
+    "myfcd_id": "MFCD-0502"
+  },
+  "teh_tarik": {
+    "name_display": "Teh Tarik",
+    "per_100g": {"calories_kcal": 75, "carbs_g": 12, "protein_g": 2, "fat_g": 2, "fiber_g": 0.0, "sodium_mg": 25},
+    "glycemic_index": 55,
+    "category": "drink_sweet",
+    "components": ["black_tea", "condensed_milk", "sugar"],
+    "myfcd_id": "MFCD-0601"
+  },
+  "milo_ais": {
+    "name_display": "Milo Ais",
+    "per_100g": {"calories_kcal": 85, "carbs_g": 16, "protein_g": 2, "fat_g": 1, "fiber_g": 0.2, "sodium_mg": 35},
+    "glycemic_index": 60,
+    "category": "drink_sweet",
+    "components": ["milo_powder", "condensed_milk", "ice"],
+    "myfcd_id": "MFCD-0602"
+  },
+  "rendang": {
+    "name_display": "Rendang (Beef)",
+    "per_100g": {"calories_kcal": 245, "carbs_g": 5, "protein_g": 22, "fat_g": 16, "fiber_g": 1.2, "sodium_mg": 560},
+    "glycemic_index": 30,
+    "category": "protein_dish",
+    "components": ["beef", "coconut_milk", "spice_paste", "kerisik"],
+    "myfcd_id": "MFCD-0421"
+  },
+  "ayam_masak_merah": {
+    "name_display": "Ayam Masak Merah",
+    "per_100g": {"calories_kcal": 175, "carbs_g": 8, "protein_g": 18, "fat_g": 8, "fiber_g": 0.8, "sodium_mg": 520},
+    "glycemic_index": 35,
+    "category": "protein_dish",
+    "components": ["chicken", "tomato_sauce", "chilli_paste", "onion"],
+    "myfcd_id": "MFCD-0431"
+  },
+  "ikan_bakar": {
+    "name_display": "Ikan Bakar",
+    "per_100g": {"calories_kcal": 165, "carbs_g": 2, "protein_g": 24, "fat_g": 7, "fiber_g": 0.3, "sodium_mg": 450},
+    "glycemic_index": 0,
+    "category": "protein_dish",
+    "components": ["fish", "sambal", "banana_leaf"],
+    "myfcd_id": "MFCD-0441"
+  },
+  "pisang_goreng": {
+    "name_display": "Pisang Goreng",
+    "per_100g": {"calories_kcal": 270, "carbs_g": 38, "protein_g": 2, "fat_g": 12, "fiber_g": 2.2, "sodium_mg": 95},
+    "glycemic_index": 65,
+    "category": "fried_snack",
+    "components": ["banana", "batter", "frying_oil"],
+    "myfcd_id": "MFCD-0701"
+  },
+  "popiah": {
+    "name_display": "Popiah",
+    "per_100g": {"calories_kcal": 155, "carbs_g": 22, "protein_g": 5, "fat_g": 5, "fiber_g": 2.5, "sodium_mg": 380},
+    "glycemic_index": 55,
+    "category": "snack",
+    "components": ["thin_crepe", "jicama", "carrot", "bean_sprouts", "egg"],
+    "myfcd_id": "MFCD-0711"
+  },
+  "cendol": {
+    "name_display": "Cendol",
+    "per_100g": {"calories_kcal": 145, "carbs_g": 24, "protein_g": 1, "fat_g": 5, "fiber_g": 0.4, "sodium_mg": 30},
+    "glycemic_index": 65,
+    "category": "dessert",
+    "components": ["pandan_jelly", "coconut_milk", "gula_melaka", "shaved_ice"],
+    "myfcd_id": "MFCD-0801"
+  },
+  "ais_kacang": {
+    "name_display": "Ais Kacang (ABC)",
+    "per_100g": {"calories_kcal": 130, "carbs_g": 25, "protein_g": 2, "fat_g": 2, "fiber_g": 1.0, "sodium_mg": 45},
+    "glycemic_index": 68,
+    "category": "dessert",
+    "components": ["shaved_ice", "red_beans", "sweet_corn", "syrups", "evaporated_milk"],
+    "myfcd_id": "MFCD-0802"
+  },
+  "bak_kut_teh": {
+    "name_display": "Bak Kut Teh",
+    "per_100g": {"calories_kcal": 105, "carbs_g": 3, "protein_g": 12, "fat_g": 5, "fiber_g": 0.5, "sodium_mg": 680},
+    "glycemic_index": 0,
+    "category": "soup",
+    "components": ["pork_ribs", "herbal_broth", "garlic", "soy_sauce"],
+    "myfcd_id": "MFCD-0451"
+  },
+  "dim_sum_avg": {
+    "name_display": "Dim Sum (Average)",
+    "per_100g": {"calories_kcal": 195, "carbs_g": 22, "protein_g": 10, "fat_g": 7, "fiber_g": 1.0, "sodium_mg": 580},
+    "glycemic_index": 60,
+    "category": "snack",
+    "components": ["dumpling_skin", "pork", "prawns", "soy_sauce"],
+    "myfcd_id": "MFCD-0721"
+  },
+  "tom_yam_chicken": {
+    "name_display": "Tom Yam (Chicken)",
+    "per_100g": {"calories_kcal": 95, "carbs_g": 6, "protein_g": 11, "fat_g": 3, "fiber_g": 0.8, "sodium_mg": 720},
+    "glycemic_index": 25,
+    "category": "soup",
+    "components": ["chicken", "lemongrass", "galangal", "lime", "chilli", "fish_sauce"],
+    "myfcd_id": "MFCD-0461"
+  },
+  "nasi_briyani": {
+    "name_display": "Nasi Briyani",
+    "per_100g": {"calories_kcal": 240, "carbs_g": 34, "protein_g": 9, "fat_g": 8, "fiber_g": 1.1, "sodium_mg": 540},
+    "glycemic_index": 72,
+    "category": "rice_dish",
+    "components": ["basmati_rice", "chicken_or_mutton", "ghee", "spices", "raisins"],
+    "myfcd_id": "MFCD-0188"
+  }
+}

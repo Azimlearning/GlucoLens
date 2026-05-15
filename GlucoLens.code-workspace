@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "GlucoLens",
+			"path": "."
+		},
+		{
+			"name": "GlucoLens Agent",
+			"path": "../../../../../Downloads/GlucoLens Agent"
+		}
+	],
+	"settings": {}
+}
