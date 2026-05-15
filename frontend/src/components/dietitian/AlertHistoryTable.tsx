@@ -12,10 +12,10 @@ interface AlertHistoryTableProps {
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: "text-red-600 bg-red-50 border-red-200",
-  high: "text-red-600 bg-red-50 border-red-200",
-  medium: "text-amber-600 bg-amber-50 border-amber-200",
-  low: "text-emerald-600 bg-emerald-50 border-emerald-200",
+  critical: "text-gl-red   bg-gl-red-soft   border-transparent",
+  high:     "text-gl-red   bg-gl-red-soft   border-transparent",
+  medium:   "text-gl-amber bg-gl-amber-soft border-transparent",
+  low:      "text-gl-green bg-gl-green-soft border-transparent",
 }
 
 type FilterTab = "all" | "critical" | "medium" | "low"
@@ -66,8 +66,8 @@ export function AlertHistoryTable({ patientId }: AlertHistoryTableProps) {
             className={clsx(
               "rounded-xl px-3 py-1.5 text-xs font-medium transition-colors",
               filter === tab.key
-                ? "bg-slate-800 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-gl-ink text-gl-bg"
+                : "bg-gl-stone-50 text-gl-stone-500 hover:bg-gl-stone-100"
             )}
           >
             {tab.label}
@@ -76,30 +76,30 @@ export function AlertHistoryTable({ patientId }: AlertHistoryTableProps) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-8">No alerts found.</p>
+        <p className="text-sm text-gl-stone-400 text-center py-8">No alerts found.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="pb-2 pr-4 font-medium text-slate-500 text-xs whitespace-nowrap">Severity</th>
-                <th className="pb-2 pr-4 font-medium text-slate-500 text-xs whitespace-nowrap">Type</th>
-                <th className="pb-2 pr-4 font-medium text-slate-500 text-xs">Message</th>
-                <th className="pb-2 font-medium text-slate-500 text-xs whitespace-nowrap">Time</th>
+              <tr className="border-b border-gl-stone-100">
+                <th className="pb-2 pr-4 font-semibold text-gl-stone-400 text-xs whitespace-nowrap">Severity</th>
+                <th className="pb-2 pr-4 font-semibold text-gl-stone-400 text-xs whitespace-nowrap">Type</th>
+                <th className="pb-2 pr-4 font-semibold text-gl-stone-400 text-xs">Message</th>
+                <th className="pb-2 font-semibold text-gl-stone-400 text-xs whitespace-nowrap">Time</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-gl-stone-100">
               {filtered.map((alert) => (
                 <tr key={alert.alert_id}>
                   <td className="py-2 pr-4 whitespace-nowrap">
                     <Badge
                       label={alert.severity}
-                      className={SEVERITY_COLORS[alert.severity] ?? "text-slate-600 bg-slate-50 border-slate-200"}
+                      className={SEVERITY_COLORS[alert.severity] ?? "text-gl-stone-500 bg-gl-stone-50 border-gl-stone-100"}
                     />
                   </td>
-                  <td className="py-2 pr-4 text-slate-600 whitespace-nowrap capitalize">{alert.type}</td>
-                  <td className="py-2 pr-4 text-slate-700">{alert.message}</td>
-                  <td className="py-2 text-slate-400 whitespace-nowrap text-xs">{formatDateTime(alert.timestamp)}</td>
+                  <td className="py-2 pr-4 text-gl-stone-500 whitespace-nowrap capitalize">{alert.type}</td>
+                  <td className="py-2 pr-4 text-gl-ink-soft">{alert.message}</td>
+                  <td className="py-2 text-gl-stone-400 whitespace-nowrap text-xs">{formatDateTime(alert.timestamp)}</td>
                 </tr>
               ))}
             </tbody>

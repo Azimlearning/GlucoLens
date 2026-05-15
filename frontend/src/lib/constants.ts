@@ -1,28 +1,29 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1"
 
+// GL palette-aligned traffic-light chip classes
 export const TRAFFIC_LIGHT_COLORS: Record<string, string> = {
-  green: "text-emerald-600 bg-emerald-50 border-emerald-200",
-  amber: "text-amber-600 bg-amber-50 border-amber-200",
-  red: "text-red-600 bg-red-50 border-red-200",
+  green: "text-gl-green bg-gl-green-soft border-transparent",
+  amber: "text-gl-amber bg-gl-amber-soft border-transparent",
+  red:   "text-gl-red   bg-gl-red-soft   border-transparent",
 }
 
 export const TRAFFIC_LIGHT_LABELS: Record<string, string> = {
   green: "Good Choice",
   amber: "Moderate",
-  red: "High Risk",
+  red:   "High Risk",
 }
 
 export const VERDICT_COLORS: Record<string, string> = {
-  safe: "text-emerald-600 bg-emerald-50",
-  caution: "text-amber-600 bg-amber-50",
-  harmful_for_you: "text-red-600 bg-red-50",
-  insufficient_evidence: "text-slate-600 bg-slate-50",
+  safe:                  "text-gl-green bg-gl-green-soft",
+  caution:               "text-gl-amber bg-gl-amber-soft",
+  harmful_for_you:       "text-gl-red   bg-gl-red-soft",
+  insufficient_evidence: "text-gl-stone-500 bg-gl-stone-50",
 }
 
 export const VERDICT_LABELS: Record<string, string> = {
-  safe: "Safe",
-  caution: "Use Caution",
-  harmful_for_you: "Harmful For You",
+  safe:                  "Safe",
+  caution:               "Use Caution",
+  harmful_for_you:       "Harmful For You",
   insufficient_evidence: "Insufficient Evidence",
 }
 

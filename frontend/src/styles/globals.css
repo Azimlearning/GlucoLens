@@ -2,10 +2,126 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── GlucoLens CSS Custom Properties ─────────────────────────────────────── */
 :root {
-  --color-brand: #0ea5e9;
+  --gl-ink:         #1A1614;
+  --gl-ink-soft:    #2B2622;
+  --gl-bg:          #FBF8F3;
+  --gl-bg-elev:     #FFFDF8;
+  --gl-bg-sunk:     #F4F0E8;
+  --gl-stone-50:    #F1EDE4;
+  --gl-stone-100:   #E8E2D5;
+  --gl-stone-200:   #D6CDBB;
+  --gl-stone-300:   #B8AD96;
+  --gl-stone-400:   #8E8470;
+  --gl-stone-500:   #5E5849;
+  --gl-stone-600:   #3D3930;
+  --gl-saffron-50:  #FAF1DF;
+  --gl-saffron-100: #F2DDB1;
+  --gl-saffron-300: #E2B469;
+  --gl-saffron-500: #C8893A;
+  --gl-saffron-600: #A8702A;
+  --gl-saffron-700: #82561E;
+  --gl-saffron-900: #4A2F10;
+  --gl-green:       #2D5F3F;
+  --gl-green-soft:  #D8E4D6;
+  --gl-amber:       #B7791F;
+  --gl-amber-soft:  #F2E2BC;
+  --gl-red:         #A33B2A;
+  --gl-red-soft:    #ECCEC4;
+  --gl-teal:        #2D6A6A;
+  --gl-teal-soft:   #CFE0DE;
+  --gl-plum:        #6B3F5C;
+  --gl-plum-soft:   #E1CFD8;
+  --gl-shadow-sm:   0 1px 0 rgba(26,22,20,0.04), 0 1px 2px rgba(26,22,20,0.04);
+  --gl-shadow:      0 2px 0 rgba(26,22,20,0.03), 0 8px 24px -10px rgba(26,22,20,0.10);
+  --gl-shadow-lg:   0 4px 0 rgba(26,22,20,0.03), 0 24px 60px -20px rgba(26,22,20,0.18);
+  --gl-spring-snap: cubic-bezier(.2,.9,.3,1.1);
+  --gl-spring-soft: cubic-bezier(.34,1.56,.64,1);
+  --gl-ease-out:    cubic-bezier(.2,.7,.2,1);
 }
 
-body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
+@layer base {
+  html, body {
+    background-color: var(--gl-bg);
+    color: var(--gl-ink);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss03";
+    font-variant-numeric: tabular-nums;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* Warm scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--gl-stone-200);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* ─── Component Utilities ───────────────────────────────────────────────────── */
+@layer components {
+  /* Display typography */
+  .font-display {
+    font-family: "General Sans", "Plus Jakarta Sans", system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.04;
+  }
+
+  .font-mono-gl {
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+  }
+
+  /* GL Chip — base style (replaces emoji-heavy Badge) */
+  .gl-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-semibold tracking-wide border;
+    border-color: var(--gl-stone-100);
+    background: var(--gl-stone-50);
+    color: var(--gl-stone-600);
+  }
+  .gl-chip-green {
+    background: var(--gl-green-soft);
+    color: var(--gl-green);
+    @apply border-transparent;
+  }
+  .gl-chip-amber {
+    background: var(--gl-amber-soft);
+    color: var(--gl-amber);
+    @apply border-transparent;
+  }
+  .gl-chip-red {
+    background: var(--gl-red-soft);
+    color: var(--gl-red);
+    @apply border-transparent;
+  }
+  .gl-chip-teal {
+    background: var(--gl-teal-soft);
+    color: var(--gl-teal);
+    @apply border-transparent;
+  }
+
+  /* Grainy paper texture overlay */
+  .gl-grain {
+    @apply relative;
+  }
+  .gl-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0 0.08  0 0 0 0.10 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.45;
+    mix-blend-mode: multiply;
+    border-radius: inherit;
+  }
 }

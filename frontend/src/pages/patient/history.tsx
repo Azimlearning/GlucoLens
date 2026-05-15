@@ -12,25 +12,27 @@ export default function MealHistoryPage() {
 
   return (
     <ProtectedRoute requiredRole="patient">
-      <div className="min-h-screen bg-slate-50">
-        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center gap-4">
-          <Link href="/patient" className="text-sm text-slate-500 hover:text-slate-700 transition-colors">
+      <div className="min-h-screen bg-gl-bg">
+        <header className="bg-gl-bg-elev border-b border-gl-stone-100 shadow-gl-sm px-6 py-4 flex items-center gap-4">
+          <Link href="/patient" className="text-sm text-gl-stone-400 hover:text-gl-ink transition-colors">
             ← Back
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-brand-700">GlucoLens</h1>
-            <p className="text-sm text-slate-500">Meal History</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-brand-500" />
+              <h1 className="font-display text-[18px] text-gl-ink">GlucoLens</h1>
+            </div>
+            <p className="text-sm text-gl-stone-400 ml-4">Meal History</p>
           </div>
         </header>
         <main className="max-w-2xl mx-auto px-4 py-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">All Meals</h2>
+          <h2 className="text-h4 font-semibold text-gl-ink mb-4">All Meals</h2>
           {loading ? (
             <div className="flex justify-center py-12">
               <Spinner />
             </div>
           ) : meals.length === 0 ? (
             <EmptyState
-              icon="🍽️"
               title="No meals logged yet"
               description="Upload a meal photo from your dashboard to get started."
             />

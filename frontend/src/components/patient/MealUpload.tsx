@@ -38,17 +38,51 @@ const NUTRIENT_LABELS: Record<string, string> = {
   carbs: "Carbs", gl: "Glycemic Load", sodium: "Sodium", protein: "Protein",
 }
 
-const MEAL_TYPES: { value: MealType; label: string; icon: string }[] = [
-  { value: "breakfast", label: "Breakfast", icon: "🌅" },
-  { value: "lunch",     label: "Lunch",     icon: "🌞" },
-  { value: "dinner",    label: "Dinner",    icon: "🌆" },
-  { value: "snack",     label: "Snack",     icon: "🍎" },
+// SVG meal-type icons (no emojis)
+const MEAL_ICONS: Record<string, JSX.Element> = {
+  breakfast: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="10" cy="10" r="5" />
+      <line x1="10" y1="1" x2="10" y2="3" />
+      <line x1="10" y1="17" x2="10" y2="19" />
+      <line x1="1" y1="10" x2="3" y2="10" />
+      <line x1="17" y1="10" x2="19" y2="10" />
+    </svg>
+  ),
+  lunch: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <path d="M4 17V9a6 6 0 0 1 12 0v8" />
+      <line x1="2" y1="17" x2="18" y2="17" />
+    </svg>
+  ),
+  dinner: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <path d="M3 7c1.5-2 4.5-2 6 0s4.5 2 6 0" />
+      <path d="M3 13h14" />
+      <line x1="6" y1="7" x2="6" y2="13" />
+      <line x1="14" y1="7" x2="14" y2="13" />
+    </svg>
+  ),
+  snack: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="10" cy="12" r="5" />
+      <path d="M10 7V4" />
+      <path d="M8 4c0-1.1.9-2 2-2s2 .9 2 2" />
+    </svg>
+  ),
+}
+
+const MEAL_TYPES: { value: MealType; label: string }[] = [
+  { value: "breakfast", label: "Breakfast" },
+  { value: "lunch",     label: "Lunch"     },
+  { value: "dinner",    label: "Dinner"    },
+  { value: "snack",     label: "Snack"     },
 ]
 
 const PORTIONS = [
-  { label: "Full",        pct: 100 },
-  { label: "¾ Portion",  pct: 75  },
-  { label: "½ Portion",  pct: 50  },
+  { label: "Full",       pct: 100 },
+  { label: "¾ Portion", pct: 75  },
+  { label: "½ Portion", pct: 50  },
 ] as const
 
 const MOTIVATIONAL: Record<string, string[]> = {
@@ -87,10 +121,10 @@ function scaleTotals(t: NutritionTotals, pct: number): Record<string, number> {
 function NutrientGrid({ t, pct }: { t: Record<string, number>; pct: number }) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm font-medium text-slate-600">Meal Totals</p>
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-sm font-semibold text-gl-ink-soft">Meal Totals</p>
         {pct < 100 && (
-          <span className="text-xs text-brand-600 font-medium bg-brand-50 px-2 py-0.5 rounded-full">
+          <span className="text-xs text-brand-600 font-semibold bg-brand-50 px-2.5 py-0.5 rounded-pill">
             {pct}% portion
           </span>
         )}
@@ -104,9 +138,9 @@ function NutrientGrid({ t, pct }: { t: Record<string, number>; pct: number }) {
           { label: "Sodium",     value: `${Math.round(t.sodium_mg ?? 0)}mg` },
           { label: "Glyc. Load", value: String((t.glycemic_load ?? 0).toFixed(1)) },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl bg-slate-50 p-2.5 text-center">
-            <p className="text-xs text-slate-400">{label}</p>
-            <p className="text-sm font-semibold text-slate-800 mt-0.5">{value}</p>
+          <div key={label} className="rounded-md bg-gl-stone-50 p-2.5 text-center border border-gl-stone-100">
+            <p className="text-xs text-gl-stone-400">{label}</p>
+            <p className="text-sm font-semibold text-gl-ink font-mono-gl mt-0.5">{value}</p>
           </div>
         ))}
       </div>
@@ -193,15 +227,15 @@ export function MealUpload() {
       .join(", ") || "Meal"
     try {
       await api.confirmMeal({
-        meal_name:       mealName,
-        meal_type:       mealType,
-        nutrition_totals: totals,
-        meal_items:      result.meal_items,
-        traffic_light:   result.traffic_light,
-        risk_score:      result.risk_score,
-        recommendations: result.recommendations,
+        meal_name:         mealName,
+        meal_type:         mealType,
+        nutrition_totals:  totals,
+        meal_items:        result.meal_items,
+        traffic_light:     result.traffic_light,
+        risk_score:        result.risk_score,
+        recommendations:   result.recommendations,
         drug_interactions: result.drug_interactions,
-        applied_swaps:   swaps,
+        applied_swaps:     swaps,
       })
       setStep("done")
     } catch (err: unknown) {
@@ -246,90 +280,114 @@ export function MealUpload() {
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold text-slate-800 mb-4">Analyse Meal</h2>
+      <h2 className="text-h4 font-semibold text-gl-ink mb-5">Analyse Meal</h2>
 
-      {/* ---- IDLE: upload zone ---- */}
+      {/* ── IDLE: upload zone ── */}
       {step === "idle" && (
         <>
-          <div className="mb-4">
-            <p className="text-xs text-slate-400 mb-2">Which meal is this?</p>
+          {/* Meal type selector */}
+          <div className="mb-5">
+            <p className="text-xs font-medium text-gl-stone-400 mb-2.5 uppercase tracking-wide">Which meal is this?</p>
             <div className="grid grid-cols-4 gap-1.5">
-              {MEAL_TYPES.map(({ value, label, icon }) => (
+              {MEAL_TYPES.map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => setMealType(value)}
-                  className={`flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 text-xs font-medium border transition-colors ${
+                  className={`flex flex-col items-center gap-1 rounded-md py-2.5 px-1 text-xs font-medium border transition-all duration-fast ease-gl active:scale-[0.97] ${
                     mealType === value
                       ? "bg-brand-50 border-brand-400 text-brand-700"
-                      : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                      : "bg-gl-stone-50 border-gl-stone-100 text-gl-stone-400 hover:border-gl-stone-200"
                   }`}
                 >
-                  <span className="text-lg">{icon}</span>
+                  <span className={mealType === value ? "text-brand-500" : "text-gl-stone-300"}>
+                    {MEAL_ICONS[value]}
+                  </span>
                   {label}
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Drop zone */}
           <div
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => inputRef.current?.click()}
-            className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 transition-colors"
+            className={[
+              "border-2 border-dashed border-gl-stone-200 rounded-lg p-8",
+              "flex flex-col items-center justify-center cursor-pointer gap-2",
+              "hover:border-brand-300 hover:bg-brand-50/40 transition-all duration-fast ease-gl",
+            ].join(" ")}
           >
-            <span className="text-3xl mb-2">📷</span>
-            <p className="text-sm text-slate-500 font-medium">Drop a photo or tap to upload</p>
-            <p className="text-xs text-slate-400 mt-1">JPG, PNG, HEIC accepted</p>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#B8AD96" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="2" y="6" width="28" height="22" rx="4" />
+              <circle cx="16" cy="17" r="5" />
+              <path d="M10 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
+            </svg>
+            <p className="text-sm font-medium text-gl-stone-500">Drop a photo or tap to upload</p>
+            <p className="text-xs text-gl-stone-300">JPG, PNG, HEIC accepted</p>
           </div>
-          <input ref={inputRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+          />
         </>
       )}
 
-      {/* ---- ANALYZING ---- */}
+      {/* ── ANALYZING ── */}
       {step === "analyzing" && (
         <div className="py-4">
           {previewUrl && (
-            <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+            <div className="mb-5 rounded-lg overflow-hidden border border-gl-stone-100 bg-gl-stone-50">
               <img src={previewUrl} alt="Uploaded meal" className="w-full object-contain max-h-72" />
             </div>
           )}
-          <p className="text-sm font-medium text-slate-600 mb-4">Analysing your meal...</p>
+          <p className="text-sm font-medium text-gl-stone-500 mb-4">Analysing your meal…</p>
           <AgentStatusTicker active={true} />
         </div>
       )}
 
-      {/* ---- DECIDING / ADJUSTING / SAVING ---- */}
+      {/* ── DECIDING / ADJUSTING / SAVING ── */}
       {result && (step === "deciding" || step === "adjusting" || step === "saving") && (
         <div className="space-y-5">
           {previewUrl && (
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+            <div className="rounded-lg overflow-hidden border border-gl-stone-100 bg-gl-stone-50">
               <img src={previewUrl} alt="Uploaded meal" className="w-full object-contain max-h-72" />
             </div>
           )}
 
+          {/* Motivational message */}
           {motivation && (
-            <div className="rounded-xl bg-brand-50 border border-brand-100 px-3 py-2.5 flex items-center gap-2">
-              <span className="text-base shrink-0">🌟</span>
+            <div className="rounded-md bg-brand-50 border border-brand-100 px-3.5 py-3 flex items-start gap-2.5">
+              {/* Leaf spark */}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5" aria-hidden="true">
+                <path d="M2 14C2 14 3 8 8 5C13 2 14 2 14 2C14 2 14 3 11 8C8 13 2 14 2 14Z" fill="#C8893A" opacity="0.7" />
+                <circle cx="8" cy="8" r="1.5" fill="#A8702A" />
+              </svg>
               <p className="text-sm text-brand-700 font-medium">{motivation}</p>
             </div>
           )}
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full capitalize">
-              {MEAL_TYPES.find((m) => m.value === mealType)?.icon} {mealType}
+          {/* Meal type + risk */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs bg-gl-stone-50 border border-gl-stone-100 text-gl-stone-500 px-2.5 py-1 rounded-pill capitalize font-medium">
+              {MEAL_TYPES.find((m) => m.value === mealType)?.label}
             </span>
-            <span className="text-sm font-medium text-slate-600">Risk:</span>
+            <span className="text-sm text-gl-stone-400">Risk:</span>
             <Badge label={riskLabel(result.risk_score)} className={riskColor(result.risk_score)} />
           </div>
 
+          {/* Traffic lights grid */}
           <div>
-            <p className="text-sm font-medium text-slate-600 mb-2">Nutrient Traffic Lights</p>
+            <p className="text-sm font-semibold text-gl-ink-soft mb-2.5">Nutrient Traffic Lights</p>
             <div className="grid grid-cols-2 gap-2">
               {NUTRIENT_KEYS.map((key) =>
                 result.traffic_light[key] ? (
-                  <div key={key} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span className="text-xs text-slate-500">{NUTRIENT_LABELS[key]}</span>
+                  <div key={key} className="flex items-center justify-between rounded-md bg-gl-stone-50 border border-gl-stone-100 px-3 py-2">
+                    <span className="text-xs text-gl-stone-400 font-medium">{NUTRIENT_LABELS[key]}</span>
                     <TrafficLightBadge value={result.traffic_light[key] as "green" | "amber" | "red"} />
                   </div>
                 ) : null
@@ -337,29 +395,28 @@ export function MealUpload() {
             </div>
           </div>
 
-          {/* Live-updating nutrition totals */}
           {adjustedTotals && <NutrientGrid t={adjustedTotals} pct={portionPct} />}
 
           <IngredientBreakdown items={result.meal_items} />
           <RecommendationsList recommendations={result.recommendations} />
           <DrugInteractionsCard interactions={result.drug_interactions} />
 
-          {/* ---- Adjustment panel (portion + swap toggles) ---- */}
+          {/* ── Adjustment panel ── */}
           {(step === "adjusting" || step === "saving") && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-4">
-              <p className="text-sm font-semibold text-amber-800">Adjust Your Meal</p>
+            <div className="rounded-lg border border-gl-amber-soft bg-gl-amber-soft/40 p-4 space-y-4">
+              <p className="text-sm font-semibold text-gl-amber">Adjust Your Meal</p>
 
               <div>
-                <p className="text-xs text-amber-700 mb-2">How much are you eating?</p>
+                <p className="text-xs text-gl-stone-500 mb-2">How much are you eating?</p>
                 <div className="grid grid-cols-3 gap-2">
                   {PORTIONS.map(({ label, pct }) => (
                     <button
                       key={pct}
                       onClick={() => setPortionPct(pct)}
-                      className={`rounded-xl py-2 text-xs font-medium border transition-colors ${
+                      className={`rounded-md py-2 text-xs font-semibold border transition-all duration-fast active:scale-[0.97] ${
                         portionPct === pct
-                          ? "bg-amber-500 border-amber-500 text-white"
-                          : "bg-white border-amber-200 text-amber-700 hover:border-amber-400"
+                          ? "bg-gl-amber text-white border-gl-amber"
+                          : "bg-white border-gl-amber-soft/80 text-gl-amber hover:border-gl-amber/40"
                       }`}
                     >
                       {label}
@@ -370,19 +427,31 @@ export function MealUpload() {
 
               {result.recommendations.length > 0 && (
                 <div>
-                  <p className="text-xs text-amber-700 mb-2">Which swaps did you apply?</p>
+                  <p className="text-xs text-gl-stone-500 mb-2">Which swaps did you apply?</p>
                   <div className="space-y-2">
                     {result.recommendations.map((rec, i) => (
                       <button
                         key={i}
                         onClick={() => toggleSwap(i)}
-                        className={`w-full text-left rounded-xl border px-3 py-2 text-xs transition-colors flex items-start gap-2 ${
+                        className={`w-full text-left rounded-md border px-3 py-2.5 text-xs transition-all duration-fast flex items-start gap-2.5 ${
                           appliedSwaps.has(i)
-                            ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                            : "bg-white border-amber-200 text-amber-800 hover:border-amber-400"
+                            ? "bg-gl-green-soft border-gl-green/20 text-gl-green"
+                            : "bg-white border-gl-stone-100 text-gl-stone-500 hover:border-gl-stone-200"
                         }`}
                       >
-                        <span className="mt-0.5 shrink-0">{appliedSwaps.has(i) ? "✅" : "○"}</span>
+                        {/* Checkmark / circle */}
+                        <span className="mt-0.5 shrink-0">
+                          {appliedSwaps.has(i) ? (
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                              <circle cx="7" cy="7" r="7" fill="#D8E4D6" />
+                              <polyline points="4,7 6,9 10,5" stroke="#2D5F3F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                            </svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                              <circle cx="7" cy="7" r="6" stroke="#D6CDBB" strokeWidth="1.4" fill="none" />
+                            </svg>
+                          )}
+                        </span>
                         <span>{rec}</span>
                       </button>
                     ))}
@@ -390,13 +459,13 @@ export function MealUpload() {
                 </div>
               )}
 
-              <Button onClick={handleLogAdjusted} disabled={step === "saving"} className="w-full">
-                {step === "saving" ? "Saving…" : "Log Adjusted Meal"}
+              <Button onClick={handleLogAdjusted} disabled={step === "saving"} loading={step === "saving"} className="w-full">
+                Log Adjusted Meal
               </Button>
               {step !== "saving" && (
                 <button
                   onClick={() => setStep("deciding")}
-                  className="w-full text-xs text-amber-600 underline text-center"
+                  className="w-full text-xs text-gl-stone-400 hover:text-gl-stone-500 underline text-center transition-colors"
                 >
                   Back
                 </button>
@@ -404,19 +473,19 @@ export function MealUpload() {
             </div>
           )}
 
-          {/* ---- Decision buttons ---- */}
+          {/* ── Decision buttons ── */}
           {step === "deciding" && (
-            <div className="space-y-2 pt-1 border-t border-slate-100">
-              <p className="text-xs text-slate-500 text-center font-medium pt-2">What would you like to do?</p>
-              <Button onClick={handleProceed} className="w-full">
-                Log This Meal
-              </Button>
+            <div className="space-y-2 pt-1 border-t border-gl-stone-100">
+              <p className="text-xs text-gl-stone-400 text-center font-medium pt-2 uppercase tracking-wide">
+                What would you like to do?
+              </p>
+              <Button onClick={handleProceed} className="w-full">Log This Meal</Button>
               <Button variant="secondary" onClick={() => setStep("adjusting")} className="w-full">
                 Adjust Meal
               </Button>
               <button
                 onClick={reset}
-                className="w-full rounded-xl py-2 px-4 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200 transition-colors"
+                className="w-full rounded-pill py-2.5 px-4 text-sm font-medium text-gl-stone-400 hover:text-gl-red hover:bg-gl-red-soft border border-gl-stone-100 transition-all duration-fast"
               >
                 Cancel — Not Eating This
               </button>
@@ -424,33 +493,45 @@ export function MealUpload() {
           )}
 
           {step === "saving" && (
-            <p className="text-center text-sm text-slate-500 py-2">Saving your meal…</p>
+            <p className="text-center text-sm text-gl-stone-400 py-2">Saving your meal…</p>
           )}
         </div>
       )}
 
-      {/* ---- DONE ---- */}
+      {/* ── DONE ── */}
       {step === "done" && (
         <div className="space-y-5">
           {previewUrl && (
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+            <div className="rounded-lg overflow-hidden border border-gl-stone-100 bg-gl-stone-50">
               <img src={previewUrl} alt="Uploaded meal" className="w-full object-contain max-h-72" />
             </div>
           )}
-          <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-6 flex flex-col items-center gap-2 text-center">
-            <span className="text-4xl">✅</span>
-            <p className="text-base font-semibold text-emerald-800">Meal logged!</p>
-            <p className="text-xs text-emerald-600">
+          <div className="rounded-lg bg-gl-green-soft border border-gl-green/20 px-4 py-7 flex flex-col items-center gap-2.5 text-center">
+            {/* Checkmark */}
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="20" fill="#2D5F3F" opacity="0.12" />
+              <circle cx="20" cy="20" r="14" fill="#D8E4D6" />
+              <polyline points="13,20 18,25 27,14" stroke="#2D5F3F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+            <p className="text-[15px] font-semibold text-gl-green">Meal logged!</p>
+            <p className="text-xs text-gl-green/70 max-w-[220px] leading-relaxed">
               Your meal has been saved. Scroll down to see your updated history and charts.
             </p>
           </div>
-          <Button variant="secondary" onClick={reset} className="w-full">
-            Upload Another
-          </Button>
+          <Button variant="secondary" onClick={reset} className="w-full">Upload Another</Button>
         </div>
       )}
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && (
+        <div role="alert" className="mt-3 flex items-start gap-2 rounded-md bg-gl-red-soft border border-gl-red/20 px-3 py-2.5">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="7" cy="7" r="6.5" stroke="#A33B2A" strokeWidth="1.2" fill="none" />
+            <line x1="7" y1="4" x2="7" y2="7.5" stroke="#A33B2A" strokeWidth="1.4" strokeLinecap="round" />
+            <circle cx="7" cy="9.5" r="0.8" fill="#A33B2A" />
+          </svg>
+          <p className="text-sm text-gl-red font-medium">{error}</p>
+        </div>
+      )}
     </Card>
   )
 }

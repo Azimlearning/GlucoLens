@@ -17,9 +17,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="GlucoLens API", version="1.0.0", lifespan=lifespan)
 
 _allowed_origins = [settings.FRONTEND_URL]
-# In development, also allow the fallback port Next.js uses when 3000 is taken
 if settings.APP_ENV == "development":
-    _allowed_origins += ["http://localhost:3000", "http://localhost:3001"]
+    # Allow any localhost port Next.js might pick (3000–3010)
+    _allowed_origins += [f"http://localhost:{p}" for p in range(3000, 3011)]
 
 app.add_middleware(
     CORSMiddleware,

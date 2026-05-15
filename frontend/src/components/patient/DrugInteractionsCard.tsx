@@ -13,35 +13,40 @@ interface DrugInteractionsCardProps {
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  low: "text-emerald-600 bg-emerald-50 border-emerald-200",
-  medium: "text-amber-600 bg-amber-50 border-amber-200",
-  moderate: "text-amber-600 bg-amber-50 border-amber-200",
-  high: "text-red-600 bg-red-50 border-red-200",
-  critical: "text-red-600 bg-red-50 border-red-200",
+  low:      "text-gl-green bg-gl-green-soft border-transparent",
+  medium:   "text-gl-amber bg-gl-amber-soft border-transparent",
+  moderate: "text-gl-amber bg-gl-amber-soft border-transparent",
+  high:     "text-gl-red   bg-gl-red-soft   border-transparent",
+  critical: "text-gl-red   bg-gl-red-soft   border-transparent",
 }
 
 export function DrugInteractionsCard({ interactions }: DrugInteractionsCardProps) {
   if (!interactions || interactions.length === 0) return null
 
   return (
-    <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4">
+    <div className="rounded-lg border border-gl-amber-soft bg-gl-amber-soft/40 p-4">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-base">⚠️</span>
-        <p className="text-sm font-semibold text-amber-800">Drug-Food Interactions</p>
+        {/* Warning triangle SVG — no emoji */}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 2 L14 13 L2 13 Z" fill="#F2E2BC" stroke="#B7791F" strokeWidth="1.4" strokeLinejoin="round" />
+          <line x1="8" y1="6.5" x2="8" y2="9.5" stroke="#B7791F" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="8" cy="11" r="0.7" fill="#B7791F" />
+        </svg>
+        <p className="text-sm font-semibold text-gl-amber">Drug-Food Interactions</p>
       </div>
       <ul className="space-y-3">
         {interactions.map((item, i) => (
-          <li key={i} className="bg-white rounded-xl p-3 border border-amber-200">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-slate-800">
+          <li key={i} className="bg-gl-bg-elev rounded-md p-3 border border-gl-stone-100">
+            <div className="flex items-center justify-between mb-1 gap-2">
+              <span className="text-sm font-medium text-gl-ink truncate">
                 {item.food} + {item.medication}
               </span>
               <Badge
                 label={item.severity}
-                className={clsx(SEVERITY_COLORS[item.severity.toLowerCase()] ?? "text-slate-600 bg-slate-50 border-slate-200")}
+                className={clsx(SEVERITY_COLORS[item.severity.toLowerCase()] ?? "text-gl-stone-500 bg-gl-stone-50 border-gl-stone-100")}
               />
             </div>
-            <p className="text-xs text-slate-600">{item.note}</p>
+            <p className="text-xs text-gl-stone-500">{item.note}</p>
           </li>
         ))}
       </ul>

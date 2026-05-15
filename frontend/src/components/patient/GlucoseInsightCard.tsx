@@ -12,13 +12,13 @@ interface GlucoseInsightCardProps {
 }
 
 export function GlucoseInsightCard({ insight }: GlucoseInsightCardProps) {
-  const borderColor = insight.severity === "high" ? "border-l-red-500" : "border-l-amber-500"
+  const borderColor = insight.severity === "high" ? "border-l-gl-red" : "border-l-gl-amber"
 
   return (
-    <div className={clsx("rounded-2xl bg-white shadow-sm border border-slate-200 border-l-4 p-6", borderColor)}>
-      <p className="text-sm font-semibold text-slate-800">{insight.headline}</p>
-      <p className="text-xs text-slate-500 mt-1">{insight.subheadline}</p>
-      <p className="text-xs text-slate-600 mt-3 font-medium">{insight.action}</p>
+    <div className={clsx("rounded-lg bg-gl-bg-elev shadow-gl-sm border border-gl-stone-100 border-l-4 px-4 py-3.5", borderColor)}>
+      <p className="text-sm font-semibold text-gl-ink">{insight.headline}</p>
+      <p className="text-xs text-gl-stone-400 mt-1">{insight.subheadline}</p>
+      <p className="text-xs text-gl-ink mt-2.5 font-medium">{insight.action}</p>
     </div>
   )
 }
