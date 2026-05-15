@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useMemo } from "react"
 import { Card } from "@/components/shared/Card"
+import { AgentTag } from "@/components/shared/AgentTag"
 import { useLiveCGM, MAX_POINTS } from "@/hooks/useLiveCGM"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRecentMeals } from "@/hooks/usePatientData"
@@ -8,20 +9,52 @@ const MIN_Y = 3
 const MAX_Y = 15
 const PAD = { left: 30, right: 10, top: 12, bottom: 20 }
 
+/** Returns true if the given timestamp string is today in local time */
+function isTodayLocal(isoString: string): boolean {
+  if (!isoString) return false
+  const d = new Date(isoString)
+  const today = new Date()
+  return d.getFullYear() === today.getFullYear() &&
+         d.getMonth() === today.getMonth() &&
+         d.getDate() === today.getDate()
+}
+
 export function GlucoseLog() {
   const { user } = useAuth()
-  const { meals } = useRecentMeals(user?.uid ?? "", 1)
-  const { points, mealEvents, current, avg, peak, mealCount, logMeal } = useLiveCGM()
+  // Fetch enough meals to detect new arrivals AND count today's total
+  const { meals } = useRecentMeals(user?.uid ?? "", 50)
+
+  // Real today's meal count from Firestore
+  const todayMeals = meals.filter((m) => {
+    return isTodayLocal((m as any).timestamp ?? "")
+  })
+  
+  const todayMealCount = todayMeals.length
+  
+  // Extract just the names for the chart to draw initial spikes
+  // We use useMemo to avoid re-initializing useLiveCGM on every render if we don't need to.
+  const todayMealNames = useMemo(() => todayMeals.map(m => m.name || "Meal"), [todayMeals.length])
+  
+  const { points, mealEvents, current, avg, peak, logMeal } = useLiveCGM(todayMealNames)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const lastMealIdRef = useRef<string | null>(null)
+
+  // Track mount time so we only spike for TRULY new meals logged while viewing
+  const mountTimeRef = useRef(Date.now())
 
   // Trigger spike when a new meal upload lands in Firestore
   useEffect(() => {
     if (!meals.length) return
     const latest = meals[0]
+    
     if (latest.meal_id !== lastMealIdRef.current) {
+      const isFirstLoad = lastMealIdRef.current === null
       lastMealIdRef.current = latest.meal_id
-      logMeal(latest.name ?? "Meal")
+      
+      // Only trigger a live spike if it's a NEW meal added AFTER we mounted
+      if (!isFirstLoad) {
+        logMeal(latest.name ?? "Meal")
+      }
     }
   }, [meals, logMeal])
 
@@ -47,14 +80,14 @@ export function GlucoseLog() {
     // Grid lines + Y labels
     ctx.font = "9px sans-serif"
     ctx.textAlign = "right"
-    ;[4, 7, 10, 14].forEach(v => {
-      const y = toY(v)
-      ctx.strokeStyle = "#E8E2D5"
-      ctx.lineWidth = 1
-      ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke()
-      ctx.fillStyle = "#8E8470"
-      ctx.fillText(String(v), PAD.left - 4, y + 3)
-    })
+      ;[4, 7, 10, 14].forEach(v => {
+        const y = toY(v)
+        ctx.strokeStyle = "#E8E2D5"
+        ctx.lineWidth = 1
+        ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke()
+        ctx.fillStyle = "#8E8470"
+        ctx.fillText(String(v), PAD.left - 4, y + 3)
+      })
 
     // 10.0 danger reference line
     const refY = toY(10.0)
@@ -70,9 +103,9 @@ export function GlucoseLog() {
     // X-axis time labels
     ctx.fillStyle = "#8E8470"
     ctx.textAlign = "center"
-    ;["-4h", "-3h", "-2h", "-1h", "now"].forEach((label, i) => {
-      ctx.fillText(label, PAD.left + (i / 4) * cW, H - 3)
-    })
+      ;["-6h", "-4.5h", "-3h", "-1.5h", "now"].forEach((label, i) => {
+        ctx.fillText(label, PAD.left + (i / 4) * cW, H - 3)
+      })
 
     if (points.length < 2) { ctx.restore(); return }
 
@@ -179,7 +212,7 @@ export function GlucoseLog() {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h2 className="text-sm font-semibold text-gl-ink">Blood Glucose</h2>
-          <p className="text-xs text-gl-stone-400">CGM · last 4 hours</p>
+          <p className="text-xs text-gl-stone-400">CGM · last 6 hours · looping</p>
         </div>
         <div className="text-right">
           <div className="flex items-center gap-1.5 justify-end mb-1">
@@ -197,7 +230,7 @@ export function GlucoseLog() {
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-2 mt-3">
         <div className="bg-gl-stone-50 rounded-md p-2.5 text-center">
-          <p className="text-[9px] text-gl-stone-400 uppercase tracking-wide mb-1">4-hr Avg</p>
+          <p className="text-[9px] text-gl-stone-400 uppercase tracking-wide mb-1">6-hr Avg</p>
           <p className="text-base font-bold font-mono-gl text-brand-500">{avg}</p>
           <p className="text-[10px] text-gl-stone-400">mmol/L</p>
         </div>
@@ -207,11 +240,12 @@ export function GlucoseLog() {
           <p className="text-[10px] text-gl-stone-400">mmol/L</p>
         </div>
         <div className="bg-gl-stone-50 rounded-md p-2.5 text-center">
-          <p className="text-[9px] text-gl-stone-400 uppercase tracking-wide mb-1">Meals</p>
-          <p className="text-base font-bold font-mono-gl text-gl-green">{mealCount}</p>
+          <p className="text-[9px] text-gl-stone-400 uppercase tracking-wide mb-1">Meals Today</p>
+          <p className="text-base font-bold font-mono-gl text-gl-green">{todayMealCount}</p>
           <p className="text-[10px] text-gl-stone-400">logged</p>
         </div>
       </div>
+      <AgentTag label="Glucose pattern analysis" agent={4} />
     </Card>
   )
 }

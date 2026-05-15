@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { AgentTag } from "@/components/shared/AgentTag"
 
 const GI_TOOLTIP = "Glycemic Index (GI): How fast this food raises blood sugar. Low <55 · Medium 55–70 · High >70. Lower is better for T2D."
 const GL_TOOLTIP = "Glycemic Load (GL): GI × carbs in your actual portion ÷ 100. More meaningful than GI alone. Low <10 · Medium 10–20 · High >20."
@@ -197,6 +198,7 @@ export function IngredientBreakdown({ items }: Props) {
           </button>
         </div>
       )}
+      <AgentTag label="Nutrition analysis" agent={2} />
     </div>
   )
 }

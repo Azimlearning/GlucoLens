@@ -1,8 +1,8 @@
 import { useEffect } from "react"
 import { Card } from "@/components/shared/Card"
 import { Spinner } from "@/components/shared/Spinner"
+import { AgentTag } from "@/components/shared/AgentTag"
 import { useRecentGlucose, useRecentMeals } from "@/hooks/usePatientData"
-import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard"
 import { api } from "@/lib/api"
 
 interface Props {
@@ -33,8 +33,8 @@ function StatBlock({
 
 export function DashboardSummaryCard({ uid, name }: Props) {
   const { readings, loading: glucLoading } = useRecentGlucose(uid, 14)
-  const { meals,    loading: mealLoading } = useRecentMeals(uid, 7)
-  const dashboard = useRealtimeDashboard(uid)
+  // Fetch 50 so we can accurately count this-week meals regardless of daily logging volume
+  const { meals, loading: mealLoading } = useRecentMeals(uid, 50)
 
   useEffect(() => {
     if (!uid) return
@@ -48,12 +48,21 @@ export function DashboardSummaryCard({ uid, name }: Props) {
     : null
 
   const glucColor = avgGlucose
-    ? parseFloat(avgGlucose) > 10   ? "text-gl-red"
+    ? parseFloat(avgGlucose) > 10 ? "text-gl-red"
       : parseFloat(avgGlucose) > 7.8 ? "text-gl-amber"
-      : "text-gl-green"
+        : "text-gl-green"
     : "text-gl-stone-400"
 
-  const riskScores = meals
+  // Real this-week meal count: filter the last 7 calendar days by local date
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+  sevenDaysAgo.setHours(0, 0, 0, 0)
+  const thisWeekMeals = meals.filter((m) => {
+    const ts = (m as any).timestamp ?? ""
+    return ts ? new Date(ts) >= sevenDaysAgo : false
+  })
+
+  const riskScores = thisWeekMeals
     .map((m) => (m as any).risk_score ?? (m as any).meal_risk_score ?? null)
     .filter((v): v is number => v !== null)
 
@@ -65,7 +74,23 @@ export function DashboardSummaryCard({ uid, name }: Props) {
     ? avgRisk >= 70 ? "text-gl-red" : avgRisk >= 40 ? "text-gl-amber" : "text-gl-green"
     : "text-gl-stone-400"
 
-  const aiSummary: string | null = dashboard?.summary ?? null
+  // Dynamically derived insight — reflects actual data state
+  let aiSummary: string
+  if (loading) {
+    aiSummary = "Analysing your data…"
+  } else if (thisWeekMeals.length === 0) {
+    aiSummary = "Log your first meal this week to get personalised clinical insights."
+  } else if (avgRisk !== null && avgRisk >= 70) {
+    aiSummary = "Your recent meals show a high clinical risk. Focus on reducing carbohydrates and sodium intake today."
+  } else if (avgRisk !== null && avgRisk >= 40) {
+    aiSummary = "Some recent meals show moderate risk. Keep an eye on portion sizes and glycemic load."
+  } else if (avgGlucose && parseFloat(avgGlucose) > 7.8) {
+    aiSummary = "Your glucose is tracking above target despite healthy meals. Consider reviewing your medication timing with your dietitian."
+  } else if (avgGlucose && parseFloat(avgGlucose) <= 7.8 && thisWeekMeals.length > 0) {
+    aiSummary = "Your recent meals and glucose levels are tracking well within healthy ranges. Keep up the good work!"
+  } else {
+    aiSummary = "Your data is looking good this week. Keep logging meals to maintain accurate insights."
+  }
 
   return (
     <Card>
@@ -75,7 +100,7 @@ export function DashboardSummaryCard({ uid, name }: Props) {
           <p className="text-xs text-gl-stone-400 uppercase tracking-wide">{greeting()}</p>
           <h2 className="text-h4 font-semibold text-gl-ink mt-0.5">{name ?? "—"}</h2>
         </div>
-        {/* Wave SVG — no emoji */}
+        {/* Wave SVG */}
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
           <path d="M7 14 C9 10, 12 10, 14 14 C16 18, 19 18, 21 14" stroke="#C8893A" strokeWidth="2" strokeLinecap="round" fill="none" />
           <path d="M4 19 C6 15, 9 15, 11 19 C13 23, 16 23, 18 19" stroke="#E2B469" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.6" />
@@ -94,7 +119,7 @@ export function DashboardSummaryCard({ uid, name }: Props) {
           />
           <StatBlock
             label="Meals"
-            value={String(meals.length)}
+            value={String(thisWeekMeals.length)}
             sub="this week"
           />
           <StatBlock
@@ -106,13 +131,12 @@ export function DashboardSummaryCard({ uid, name }: Props) {
         </div>
       )}
 
-      {/* AI insight strip */}
-      {aiSummary && (
-        <div className="rounded-md bg-brand-50 border border-brand-100 px-3.5 py-3">
-          <p className="text-xs font-semibold text-brand-600 mb-0.5 uppercase tracking-wide">AI Insight</p>
-          <p className="text-sm text-gl-ink-soft leading-relaxed">{aiSummary}</p>
-        </div>
-      )}
+      {/* AI insight strip — always visible, data-driven message */}
+      <div className="rounded-md bg-brand-50 border border-brand-100 px-3.5 py-3">
+        <p className="text-xs font-semibold text-brand-600 mb-0.5 uppercase tracking-wide">AI Insight</p>
+        <p className="text-sm text-gl-ink-soft leading-relaxed">{aiSummary}</p>
+        <AgentTag label="Clinical review" agent={3} />
+      </div>
     </Card>
   )
 }

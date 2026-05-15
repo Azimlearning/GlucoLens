@@ -5,6 +5,9 @@ import { Button } from "@/components/shared/Button"
 import { Badge } from "@/components/shared/Badge"
 import { TrafficLightBadge } from "@/components/shared/TrafficLight"
 import { AgentStatusTicker } from "./AgentStatusTicker"
+import { StaggeredCardList } from "@/components/shared/StaggeredCardList"
+import { AnalysisAuditFooter } from "@/components/shared/AnalysisAuditFooter"
+import { useAgentTicker } from "@/hooks/useAgentTicker"
 import { RecommendationsList } from "./RecommendationsList"
 import { DrugInteractionsCard } from "./DrugInteractionsCard"
 import { IngredientBreakdown } from "./IngredientBreakdown"
@@ -74,26 +77,26 @@ const MEAL_ICONS: Record<string, JSX.Element> = {
 
 const MEAL_TYPES: { value: MealType; label: string }[] = [
   { value: "breakfast", label: "Breakfast" },
-  { value: "lunch",     label: "Lunch"     },
-  { value: "dinner",    label: "Dinner"    },
-  { value: "snack",     label: "Snack"     },
+  { value: "lunch", label: "Lunch" },
+  { value: "dinner", label: "Dinner" },
+  { value: "snack", label: "Snack" },
 ]
 
 const PORTIONS = [
-  { label: "Full",       pct: 100 },
-  { label: "¾ Portion", pct: 75  },
-  { label: "½ Portion", pct: 50  },
+  { label: "Full", pct: 100 },
+  { label: "¾ Portion", pct: 75 },
+  { label: "½ Portion", pct: 50 },
 ] as const
 
 const MOTIVATIONAL: Record<string, string[]> = {
-  low:      ["Great choice! Keep it up!", "Well balanced meal — your body thanks you!", "Excellent logging — you're on track!"],
+  low: ["Great choice! Keep it up!", "Well balanced meal — your body thanks you!", "Excellent logging — you're on track!"],
   moderate: ["Good job logging! Small swaps can help further.", "You're tracking well — check the swaps above!"],
-  high:     ["Thanks for logging — awareness is the first step!", "Every log counts — review the suggestions to improve."],
+  high: ["Thanks for logging — awareness is the first step!", "Every log counts — review the suggestions to improve."],
 }
 
 function suggestMealType(): MealType {
   const h = new Date().getHours()
-  if (h >= 5  && h < 11) return "breakfast"
+  if (h >= 5 && h < 11) return "breakfast"
   if (h >= 11 && h < 15) return "lunch"
   if (h >= 15 && h < 22) return "dinner"
   return "snack"
@@ -108,17 +111,17 @@ function pickMotivation(riskScore: number): string {
 // Per-swap nutrient adjustment — each checked swap applies a targeted reduction.
 // We parse the swap text for keywords to decide which nutrient to reduce.
 const SWAP_BENEFIT_PER_NUTRIENT: Record<string, Partial<Record<keyof NutritionTotals, number>>> = {
-  sodium:   { sodium_mg: 0.10 },
-  carb:     { carbs_g: 0.08, glycemic_load: 0.08 },
+  sodium: { sodium_mg: 0.10 },
+  carb: { carbs_g: 0.08, glycemic_load: 0.08 },
   glycemic: { carbs_g: 0.06, glycemic_load: 0.10 },
-  oil:      { calories_kcal: 0.06, fat_g: 0.10 },
-  vegeta:   { fiber_g: 0.15, glycemic_load: 0.05 },
-  bean:     { fiber_g: 0.15, glycemic_load: 0.05, carbs_g: 0.05 },
-  protein:  { protein_g: 0.10 },
-  portion:  { calories_kcal: 0.08, carbs_g: 0.08, sodium_mg: 0.05 },
-  sauce:    { sodium_mg: 0.08 },
-  steam:    { calories_kcal: 0.08, fat_g: 0.12 },
-  lard:     { calories_kcal: 0.05, fat_g: 0.10, sodium_mg: 0.05 },
+  oil: { calories_kcal: 0.06, fat_g: 0.10 },
+  vegeta: { fiber_g: 0.15, glycemic_load: 0.05 },
+  bean: { fiber_g: 0.15, glycemic_load: 0.05, carbs_g: 0.05 },
+  protein: { protein_g: 0.10 },
+  portion: { calories_kcal: 0.08, carbs_g: 0.08, sodium_mg: 0.05 },
+  sauce: { sodium_mg: 0.08 },
+  steam: { calories_kcal: 0.08, fat_g: 0.12 },
+  lard: { calories_kcal: 0.05, fat_g: 0.10, sodium_mg: 0.05 },
 }
 
 function swapReductionFactor(swap: string): Partial<Record<keyof NutritionTotals, number>> {
@@ -148,12 +151,12 @@ function scaleTotals(
   // Start with portion-scaled values
   const result: Record<string, number> = {
     calories_kcal: t.calories_kcal * f,
-    carbs_g:       t.carbs_g       * f,
-    protein_g:     t.protein_g     * f,
-    fat_g:         t.fat_g         * f,
-    sodium_mg:     t.sodium_mg     * f,
+    carbs_g: t.carbs_g * f,
+    protein_g: t.protein_g * f,
+    fat_g: t.fat_g * f,
+    sodium_mg: t.sodium_mg * f,
     glycemic_load: t.glycemic_load * f,
-    fiber_g:       (t.fiber_g ?? 0) * f,
+    fiber_g: (t.fiber_g ?? 0) * f,
   }
   // Apply cumulative swap reductions (capped at 40% total reduction per nutrient)
   for (const swap of appliedSwapTexts) {
@@ -187,11 +190,11 @@ function NutrientGrid({ t, pct }: { t: Record<string, number>; pct: number }) {
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Calories",   value: formatKcal(t.calories_kcal) },
-          { label: "Carbs",      value: formatGrams(t.carbs_g) },
-          { label: "Protein",    value: formatGrams(t.protein_g) },
-          { label: "Fat",        value: formatGrams(t.fat_g) },
-          { label: "Sodium",     value: `${Math.round(t.sodium_mg ?? 0)}mg` },
+          { label: "Calories", value: formatKcal(t.calories_kcal) },
+          { label: "Carbs", value: formatGrams(t.carbs_g) },
+          { label: "Protein", value: formatGrams(t.protein_g) },
+          { label: "Fat", value: formatGrams(t.fat_g) },
+          { label: "Sodium", value: `${Math.round(t.sodium_mg ?? 0)}mg` },
           { label: "Glyc. Load", value: String((t.glycemic_load ?? 0).toFixed(1)) },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-md bg-gl-stone-50 p-2.5 text-center border border-gl-stone-100">
@@ -214,6 +217,11 @@ export function MealUpload() {
   const [motivation, setMotivation] = useState("")
   const [portionPct, setPortionPct] = useState(100)
   const [appliedSwaps, setAppliedSwaps] = useState<Set<number>>(new Set())
+  const [resultTimestamp, setResultTimestamp] = useState<string | undefined>(undefined)
+
+  // Option 1 — ticker gating: hold result display until all stages have been shown
+  const isAnalysing = step === "analyzing"
+  const { tickerDone } = useAgentTicker(isAnalysing)
 
   const compressImage = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -254,8 +262,11 @@ export function MealUpload() {
       try {
         const { data } = await api.uploadMeal(base64, mealType)
         if (data.success) {
+          // Store result but wait for ticker to finish before showing
           setResult(data)
           setMotivation(pickMotivation(data.risk_score ?? 0))
+          setResultTimestamp(new Date().toISOString())
+          // Step will transition to "deciding" via useEffect once tickerDone
           setStep("deciding")
         } else {
           setError(data.errors?.[0]?.error ?? "Analysis failed — try a clearer photo.")
@@ -283,15 +294,15 @@ export function MealUpload() {
       .join(", ") || "Meal"
     try {
       await api.confirmMeal({
-        meal_name:         mealName,
-        meal_type:         mealType,
-        nutrition_totals:  totals,
-        meal_items:        result.meal_items,
-        traffic_light:     result.traffic_light,
-        risk_score:        result.risk_score,
-        recommendations:   result.recommendations,
+        meal_name: mealName,
+        meal_type: mealType,
+        nutrition_totals: totals,
+        meal_items: result.meal_items,
+        traffic_light: result.traffic_light,
+        risk_score: result.risk_score,
+        recommendations: result.recommendations,
         drug_interactions: result.drug_interactions,
-        applied_swaps:     swaps,
+        applied_swaps: swaps,
       })
       setStep("done")
     } catch (err: unknown) {
@@ -327,6 +338,7 @@ export function MealUpload() {
     setMotivation("")
     setPortionPct(100)
     setAppliedSwaps(new Set())
+    setResultTimestamp(undefined)
     if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
     if (inputRef.current) inputRef.current.value = ""
     setMealType(suggestMealType())
@@ -334,12 +346,12 @@ export function MealUpload() {
 
   const adjustedTotals = result
     ? scaleTotals(
-        result.nutrition_totals,
-        portionPct,
-        step === "adjusting" || step === "saving"
-          ? [...appliedSwaps].map((i) => result.recommendations[i]).filter(Boolean)
-          : [],
-      )
+      result.nutrition_totals,
+      portionPct,
+      step === "adjusting" || step === "saving"
+        ? [...appliedSwaps].map((i) => result.recommendations[i]).filter(Boolean)
+        : [],
+    )
     : null
 
   return (
@@ -357,11 +369,10 @@ export function MealUpload() {
                 <button
                   key={value}
                   onClick={() => setMealType(value)}
-                  className={`flex flex-col items-center gap-1 rounded-md py-2.5 px-1 text-xs font-medium border transition-all duration-fast ease-gl active:scale-[0.97] ${
-                    mealType === value
+                  className={`flex flex-col items-center gap-1 rounded-md py-2.5 px-1 text-xs font-medium border transition-all duration-fast ease-gl active:scale-[0.97] ${mealType === value
                       ? "bg-brand-50 border-brand-400 text-brand-700"
                       : "bg-gl-stone-50 border-gl-stone-100 text-gl-stone-400 hover:border-gl-stone-200"
-                  }`}
+                    }`}
                 >
                   <span className={mealType === value ? "text-brand-500" : "text-gl-stone-300"}>
                     {MEAL_ICONS[value]}
@@ -410,11 +421,15 @@ export function MealUpload() {
             </div>
           )}
           <p className="text-sm font-medium text-gl-stone-500 mb-4">Analysing your meal…</p>
+          {/* Option 1 — AgentStatusTicker with per-stage timing */}
           <AgentStatusTicker active={true} />
+          {!tickerDone && (
+            <p className="text-xs text-gl-stone-300 text-center mt-3">Please wait while all agents complete…</p>
+          )}
         </div>
       )}
 
-      {/* ── DECIDING / ADJUSTING / SAVING ── */}
+      {/* ── DECIDING / ADJUSTING / SAVING ── Option 2: staggered card reveal ── */}
       {result && (step === "deciding" || step === "adjusting" || step === "saving") && (
         <div className="space-y-5">
           {previewUrl && (
@@ -426,7 +441,6 @@ export function MealUpload() {
           {/* Motivational message */}
           {motivation && (
             <div className="rounded-md bg-brand-50 border border-brand-100 px-3.5 py-3 flex items-start gap-2.5">
-              {/* Leaf spark */}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5" aria-hidden="true">
                 <path d="M2 14C2 14 3 8 8 5C13 2 14 2 14 2C14 2 14 3 11 8C8 13 2 14 2 14Z" fill="#C8893A" opacity="0.7" />
                 <circle cx="8" cy="8" r="1.5" fill="#A8702A" />
@@ -444,26 +458,50 @@ export function MealUpload() {
             <Badge label={riskLabel(result.risk_score)} className={riskColor(result.risk_score)} />
           </div>
 
-          {/* Traffic lights grid */}
-          <div>
-            <p className="text-sm font-semibold text-gl-ink-soft mb-2.5">Nutrient Traffic Lights</p>
-            <div className="grid grid-cols-2 gap-2">
-              {NUTRIENT_KEYS.map((key) =>
-                result.traffic_light[key] ? (
-                  <div key={key} className="flex items-center justify-between rounded-md bg-gl-stone-50 border border-gl-stone-100 px-3 py-2">
-                    <span className="text-xs text-gl-stone-400 font-medium">{NUTRIENT_LABELS[key]}</span>
-                    <TrafficLightBadge value={result.traffic_light[key] as "green" | "amber" | "red"} />
-                  </div>
-                ) : null
-              )}
-            </div>
-          </div>
+          {/* Option 2 — Staggered card reveal, keyed to result timestamp */}
+          <StaggeredCardList animKey={resultTimestamp} delayBetweenMs={180}>
+            {[
+              /* Card 1 — Traffic lights (Clinical review · Agent 3) */
+              <div key="traffic">
+                <p className="text-xs font-semibold text-gl-stone-400 uppercase tracking-widest mb-2">Clinical review · Agent 3</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {NUTRIENT_KEYS.map((key) =>
+                    result.traffic_light[key] ? (
+                      <div key={key} className="flex items-center justify-between rounded-md bg-gl-stone-50 border border-gl-stone-100 px-3 py-2">
+                        <span className="text-xs text-gl-stone-400 font-medium">{NUTRIENT_LABELS[key]}</span>
+                        <TrafficLightBadge value={result.traffic_light[key] as "green" | "amber" | "red"} />
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              </div>,
 
-          {adjustedTotals && <NutrientGrid t={adjustedTotals} pct={portionPct} />}
+              /* Card 2 — Nutrition totals (Nutrition analysis · Agent 2) */
+              <div key="nutrition">
+                <p className="text-xs font-semibold text-gl-stone-400 uppercase tracking-widest mb-2">Nutrition analysis · Agent 2</p>
+                {adjustedTotals && <NutrientGrid t={adjustedTotals} pct={portionPct} />}
+              </div>,
 
-          <IngredientBreakdown items={result.meal_items} />
-          <RecommendationsList recommendations={result.recommendations} />
-          <DrugInteractionsCard interactions={result.drug_interactions} />
+              /* Card 3 — Ingredient breakdown */
+              <IngredientBreakdown key="ingredients" items={result.meal_items} />,
+
+              /* Card 4 — Swap suggestions (Clinical review · Agent 3) */
+              <div key="swaps">
+                <p className="text-xs font-semibold text-gl-stone-400 uppercase tracking-widest mb-2">Clinical review · Agent 3</p>
+                <RecommendationsList recommendations={result.recommendations} />
+              </div>,
+
+              /* Card 5 — Drug interactions (Medication safety · Agent 3) — only if present */
+              ...(result.drug_interactions.length > 0
+                ? [
+                    <div key="drugs">
+                      <p className="text-xs font-semibold text-gl-stone-400 uppercase tracking-widest mb-2">Medication safety check · Agent 3</p>
+                      <DrugInteractionsCard interactions={result.drug_interactions} />
+                    </div>,
+                  ]
+                : []),
+            ]}
+          </StaggeredCardList>
 
           {/* ── Adjustment panel ── */}
           {(step === "adjusting" || step === "saving") && (
@@ -477,11 +515,10 @@ export function MealUpload() {
                     <button
                       key={pct}
                       onClick={() => setPortionPct(pct)}
-                      className={`rounded-md py-2 text-xs font-semibold border transition-all duration-fast active:scale-[0.97] ${
-                        portionPct === pct
+                      className={`rounded-md py-2 text-xs font-semibold border transition-all duration-fast active:scale-[0.97] ${portionPct === pct
                           ? "bg-gl-amber text-white border-gl-amber"
                           : "bg-white border-gl-amber-soft/80 text-gl-amber hover:border-gl-amber/40"
-                      }`}
+                        }`}
                     >
                       {label}
                     </button>
@@ -497,11 +534,10 @@ export function MealUpload() {
                       <button
                         key={i}
                         onClick={() => toggleSwap(i)}
-                        className={`w-full text-left rounded-md border px-3 py-2.5 text-xs transition-all duration-fast flex items-start gap-2.5 ${
-                          appliedSwaps.has(i)
+                        className={`w-full text-left rounded-md border px-3 py-2.5 text-xs transition-all duration-fast flex items-start gap-2.5 ${appliedSwaps.has(i)
                             ? "bg-gl-green-soft border-gl-green/20 text-gl-green"
                             : "bg-white border-gl-stone-100 text-gl-stone-500 hover:border-gl-stone-200"
-                        }`}
+                          }`}
                       >
                         {/* Checkmark / circle */}
                         <span className="mt-0.5 shrink-0">
@@ -563,26 +599,96 @@ export function MealUpload() {
       )}
 
       {/* ── DONE ── */}
-      {step === "done" && (
-        <div className="space-y-5">
+      {step === "done" && result && (
+        <div className="space-y-4">
           {previewUrl && (
             <div className="rounded-lg overflow-hidden border border-gl-stone-100 bg-gl-stone-50">
               <img src={previewUrl} alt="Uploaded meal" className="w-full object-contain max-h-72" />
             </div>
           )}
-          <div className="rounded-lg bg-gl-green-soft border border-gl-green/20 px-4 py-7 flex flex-col items-center gap-2.5 text-center">
-            {/* Checkmark */}
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+
+          {/* Success banner */}
+          <div className="rounded-lg bg-gl-green-soft border border-gl-green/20 px-4 py-4 flex items-center gap-3">
+            <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
               <circle cx="20" cy="20" r="20" fill="#2D5F3F" opacity="0.12" />
               <circle cx="20" cy="20" r="14" fill="#D8E4D6" />
               <polyline points="13,20 18,25 27,14" stroke="#2D5F3F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
-            <p className="text-[15px] font-semibold text-gl-green">Meal logged!</p>
-            <p className="text-xs text-gl-green/70 max-w-[220px] leading-relaxed">
-              Your meal has been saved. Scroll down to see your updated history and charts.
-            </p>
+            <div>
+              <p className="text-[15px] font-semibold text-gl-green">Meal logged!</p>
+              <p className="text-xs text-gl-green/70">Analysis complete — see your results below</p>
+            </div>
           </div>
-          <Button variant="secondary" onClick={reset} className="w-full">Upload Another</Button>
+
+          {/* Logged nutrition summary */}
+          <div className="rounded-lg border border-gl-stone-100 bg-gl-stone-50 p-4 space-y-3">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-semibold text-gl-stone-400 uppercase tracking-wide">Logged Nutrition</p>
+              <Badge label={riskLabel(result.risk_score)} className={riskColor(result.risk_score)} />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Calories", value: formatKcal(adjustedTotals?.calories_kcal ?? result.nutrition_totals.calories_kcal) },
+                { label: "Carbs", value: formatGrams(adjustedTotals?.carbs_g ?? result.nutrition_totals.carbs_g) },
+                { label: "Protein", value: formatGrams(adjustedTotals?.protein_g ?? result.nutrition_totals.protein_g) },
+                { label: "Fat", value: formatGrams(adjustedTotals?.fat_g ?? result.nutrition_totals.fat_g) },
+                { label: "Sodium", value: `${Math.round(adjustedTotals?.sodium_mg ?? result.nutrition_totals.sodium_mg)}mg` },
+                { label: "Glyc. Load", value: String((adjustedTotals?.glycemic_load ?? result.nutrition_totals.glycemic_load).toFixed(1)) },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-md bg-white p-2.5 text-center border border-gl-stone-100">
+                  <p className="text-[10px] text-gl-stone-400">{label}</p>
+                  <p className="text-sm font-semibold text-gl-ink font-mono-gl mt-0.5">{value}</p>
+                </div>
+              ))}
+            </div>
+            {/* Traffic lights inline */}
+            {result.traffic_light && Object.keys(result.traffic_light).length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {NUTRIENT_KEYS.map((key) =>
+                  result.traffic_light[key] ? (
+                    <div key={key} className="flex items-center gap-1.5 bg-white rounded-pill px-2.5 py-1 border border-gl-stone-100 text-xs">
+                      <span className="text-gl-stone-400">{NUTRIENT_LABELS[key]}</span>
+                      <TrafficLightBadge value={result.traffic_light[key] as "green" | "amber" | "red"} />
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+            {/* Agent attribution */}
+            <p className="text-[10px] text-gl-stone-300 uppercase tracking-widest pt-1">Nutrition analysis · Agent 2 &amp; Clinical review · Agent 3</p>
+          </div>
+
+          {/* Swap suggestions logged */}
+          {result.recommendations && result.recommendations.length > 0 && (
+            <div className="rounded-lg border border-brand-100 bg-brand-50 px-4 py-3">
+              <p className="text-[10px] font-semibold text-brand-400 uppercase tracking-wide mb-2">Dietitian Tips</p>
+              <ul className="space-y-1">
+                {result.recommendations.slice(0, 3).map((rec, i) => (
+                  <li key={i} className="text-xs text-brand-700 flex gap-1.5">
+                    <span className="text-brand-400 shrink-0">•</span>{rec}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] text-gl-stone-300 uppercase tracking-widest mt-2">Clinical review · Agent 3</p>
+            </div>
+          )}
+
+          {/* Option 3 — Analysis Audit Footer */}
+          <AnalysisAuditFooter
+            audit={{
+              completedAt: resultTimestamp,
+              lensesRun: [
+                { id: "vision",    label: "Food recognition",         status: "completed" },
+                { id: "nutrition", label: "Nutrition analysis",        status: "completed" },
+                { id: "clinical",  label: "Clinical review",           status: "completed" },
+                { id: "drug",      label: "Medication safety check",   status: result.drug_interactions.length > 0 ? "completed" : "skipped" },
+                { id: "glucose",   label: "Glucose pattern analysis",  status: "completed" },
+                { id: "alerts",    label: "Risk monitoring",           status: "completed" },
+              ],
+            }}
+          />
+
+          <Button variant="secondary" onClick={reset} className="w-full">Log Another Meal</Button>
         </div>
       )}
 

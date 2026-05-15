@@ -1,5 +1,6 @@
 import { Card } from "@/components/shared/Card"
 import { Badge } from "@/components/shared/Badge"
+import { AgentTag } from "@/components/shared/AgentTag"
 import { useAlerts } from "@/hooks/usePatientData"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -29,6 +30,7 @@ export function AlertFeed() {
           </li>
         ))}
       </ul>
+      <AgentTag label="Risk monitoring" agent={5} />
     </Card>
   )
 }

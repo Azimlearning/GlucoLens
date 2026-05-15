@@ -9,47 +9,52 @@ import type { GlucoseReading } from "@/lib/types"
 
 // MOH CPG T2DM 2020 targets
 const POPULATION_AVG_MMOL = 8.0
-const POST_MEAL_TARGET    = 10.0
-const FASTING_TARGET      = 7.0
+const POST_MEAL_TARGET = 10.0
+const FASTING_TARGET = 7.0
 
 // GL palette hex values for Recharts (needs raw hex, not Tailwind classes)
-const GL_SAFFRON  = "#C8893A"
+const GL_SAFFRON = "#C8893A"
 const GL_STONE_200 = "#D6CDBB"
 const GL_STONE_400 = "#8E8470"
-const GL_AMBER    = "#B7791F"
-const GL_RED      = "#A33B2A"
-const GL_GREEN    = "#2D5F3F"
+const GL_AMBER = "#B7791F"
+const GL_RED = "#A33B2A"
+const GL_GREEN = "#2D5F3F"
 
 function formatLabel(timestamp: string): string {
   const d = new Date(timestamp)
-  const day  = d.toLocaleDateString("en-MY", { weekday: "short" })
+  const day = d.toLocaleDateString("en-MY", { weekday: "short" })
   const time = d.toLocaleTimeString("en-MY", { hour: "numeric", hour12: true })
   return `${day} ${time}`
 }
 
-function buildChartData(readings: GlucoseReading[]) {
+function buildChartData(readings: GlucoseReading[], personalBaseline: number) {
   return [...readings]
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map((r) => ({
-      label:     formatLabel(r.timestamp),
-      You:       parseFloat(r.value_mmol.toFixed(1)),
-      "Avg T2D": POPULATION_AVG_MMOL,
+      label: formatLabel(r.timestamp),
+      You: parseFloat(r.value_mmol.toFixed(1)),
+      "T2DM Target": FASTING_TARGET,
+      "Post-meal Limit": POST_MEAL_TARGET,
+      "Your Baseline": parseFloat(personalBaseline.toFixed(1)),
     }))
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   const you = payload.find((p: any) => p.dataKey === "You")
+  const baseline = payload.find((p: any) => p.dataKey === "Your Baseline")
   if (!you) return null
-  const delta = ((you.value - POPULATION_AVG_MMOL) / POPULATION_AVG_MMOL * 100).toFixed(0)
-  const above = you.value > POPULATION_AVG_MMOL
+  const delta = you.value - (baseline?.value ?? FASTING_TARGET)
+  const above = delta > 0
   return (
     <div className="bg-gl-bg-elev border border-gl-stone-100 rounded-md px-3 py-2.5 shadow-gl-sm text-xs space-y-1">
       <p className="font-semibold text-gl-ink">{label}</p>
       <p className="font-semibold font-mono-gl" style={{ color: GL_SAFFRON }}>{you.value} mmol/L</p>
-      <p style={{ color: above ? GL_RED : GL_GREEN }}>
-        {above ? "+" : ""}{delta}% vs population avg
-      </p>
+      {baseline && (
+        <p style={{ color: above ? GL_RED : GL_GREEN }}>
+          {above ? "+" : ""}{delta.toFixed(1)} vs your {baseline.value} baseline
+        </p>
+      )}
     </div>
   )
 }
@@ -58,6 +63,15 @@ interface Props { uid: string }
 
 export function GlucoseChartCard({ uid }: Props) {
   const { readings, loading } = useRecentGlucose(uid, 30)
+
+  // Derive a personal rolling baseline: median of all fetched readings
+  const sorted = [...readings].sort((a, b) => a.value_mmol - b.value_mmol)
+  const mid = Math.floor(sorted.length / 2)
+  const personalBaseline = sorted.length
+    ? sorted.length % 2 === 0
+      ? (sorted[mid - 1].value_mmol + sorted[mid].value_mmol) / 2
+      : sorted[mid].value_mmol
+    : FASTING_TARGET
 
   if (loading) {
     return (
@@ -68,13 +82,20 @@ export function GlucoseChartCard({ uid }: Props) {
     )
   }
 
-  if (readings.length === 0) return null
+  if (readings.length === 0) {
+    return (
+      <Card>
+        <h2 className="text-h4 font-semibold text-gl-ink mb-1">Glucose Response</h2>
+        <p className="text-sm text-gl-stone-400 text-center py-8">No glucose readings yet. Readings will appear here after your first meal is logged.</p>
+      </Card>
+    )
+  }
 
-  const chartData = buildChartData(readings)
-  const userAvg   = readings.reduce((s, r) => s + r.value_mmol, 0) / readings.length
-  const deltaPct  = (userAvg - POPULATION_AVG_MMOL) / POPULATION_AVG_MMOL * 100
-  const above     = deltaPct > 0
-  const maxVal    = Math.max(...readings.map((r) => r.value_mmol), POST_MEAL_TARGET + 1)
+  const chartData = buildChartData(readings, personalBaseline)
+  const userAvg = readings.reduce((s, r) => s + r.value_mmol, 0) / readings.length
+  const deltaPct = (userAvg - FASTING_TARGET) / FASTING_TARGET * 100
+  const above = deltaPct > 0
+  const maxVal = Math.max(...readings.map((r) => r.value_mmol), POST_MEAL_TARGET + 1)
 
   return (
     <Card>
@@ -95,12 +116,12 @@ export function GlucoseChartCard({ uid }: Props) {
         className="inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 mb-4 text-xs font-semibold"
         style={{
           background: above ? "#ECCEC4" : "#D8E4D6",
-          color:      above ? GL_RED    : GL_GREEN,
+          color: above ? GL_RED : GL_GREEN,
         }}
       >
         <span>{above ? "▲" : "▼"}</span>
         <span className="font-mono-gl">
-          {userAvg.toFixed(1)} mmol/L · {above ? "+" : ""}{deltaPct.toFixed(0)}% vs avg ({POPULATION_AVG_MMOL} mmol/L)
+          {userAvg.toFixed(1)} mmol/L · {above ? "+" : ""}{deltaPct.toFixed(0)}% vs fasting target ({FASTING_TARGET} mmol/L)
         </span>
       </div>
 
@@ -138,7 +159,7 @@ export function GlucoseChartCard({ uid }: Props) {
           />
           <Line
             type="monotone"
-            dataKey="Avg T2D"
+            dataKey="Your Baseline"
             stroke={GL_STONE_200}
             strokeWidth={1.5}
             strokeDasharray="5 3"
@@ -156,7 +177,7 @@ export function GlucoseChartCard({ uid }: Props) {
       </ResponsiveContainer>
 
       <p className="text-xs text-gl-stone-300 text-center mt-2">
-        Based on MOH CPG T2DM 2020 · Last {readings.length} readings
+        Based on MOH CPG T2DM 2020 · Last {readings.length} readings · Baseline: {personalBaseline.toFixed(1)} mmol/L
       </p>
     </Card>
   )

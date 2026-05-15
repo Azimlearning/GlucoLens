@@ -1,4 +1,5 @@
 import { Badge } from "@/components/shared/Badge"
+import { AgentTag } from "@/components/shared/AgentTag"
 import clsx from "clsx"
 
 interface Interaction {
@@ -50,6 +51,7 @@ export function DrugInteractionsCard({ interactions }: DrugInteractionsCardProps
           </li>
         ))}
       </ul>
+      <AgentTag label="Medication safety check" agent="3 (Drug check)" />
     </div>
   )
 }
