@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from backend.config import settings
 from backend.utils.logging import configure_logging
-from backend.routers import health, meals, glucose, misinfo, reports, dashboard
+from backend.routers import health, meals, glucose, misinfo, reports, dashboard, alerts, patients, scheduling
 
 
 @asynccontextmanager
@@ -16,9 +16,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="GlucoLens API", version="1.0.0", lifespan=lifespan)
 
+_allowed_origins = [settings.FRONTEND_URL]
+if settings.APP_ENV == "development":
+    # Allow any localhost port Next.js might pick (3000–3010)
+    _allowed_origins += [f"http://localhost:{p}" for p in range(3000, 3011)]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=list(set(_allowed_origins)),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,3 +45,6 @@ app.include_router(glucose.router, prefix="/api/v1")
 app.include_router(misinfo.router, prefix="/api/v1")
 app.include_router(reports.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(alerts.router, prefix="/api/v1/alerts")
+app.include_router(patients.router, prefix="/api/v1/patients")
+app.include_router(scheduling.router, prefix="/api/v1")

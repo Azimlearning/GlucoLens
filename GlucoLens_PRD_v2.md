@@ -1707,16 +1707,19 @@ function isDietitianOf(dietitianUid, patientUid) {
 
 | Component | Purpose | Key Props/State |
 |---|---|---|
-| `MealUpload.tsx` | Drag-and-drop or camera capture | `onUpload(file)`, displays agent status ticker |
-| `AgentStatusTicker.tsx` | Live progress of agent pipeline | Subscribes to `/dashboard/{uid}/live`; renders ✓/⏳ per agent |
+| `DashboardSummaryCard.tsx` | **Always-visible** greeting card with avg glucose, meal count, avg risk, and AI summary from Agent 7. Calls `/dashboard/` on mount to trigger RTDB refresh. | `uid`, `name`; uses `useRecentGlucose`, `useRecentMeals`, `useRealtimeDashboard` |
+| `MealUpload.tsx` | Drag-and-drop or camera capture. Shows uploaded image preview. After analysis shows 6-macro totals + ingredient breakdown + traffic lights + recommendations + drug interactions. | internal state; calls `POST /api/v1/meals/upload` |
+| `IngredientBreakdown.tsx` | Per-item card showing: food name + portion, components as ingredient chips, macro bar chart (carbs/protein/fat/fibre), per-portion sodium, confidence badge, allergen alert. | `items: MealItemDetail[]` |
+| `AgentStatusTicker.tsx` | Live progress of agent pipeline | renders ✓/⏳ per agent stage |
 | `TrafficLight.tsx` | 🟢/🟡/🔴 per nutrient | `data: {carbs, gl, sodium, protein}` |
-| `MealBreakdown.tsx` | Per-item nutrition table | `items: NutritionItem[]` |
+| `MealBreakdown.tsx` | Per-item nutrition table (used in MealHistory) | `items: NutritionItem[]` |
 | `RecommendationsList.tsx` | Swap suggestions | `recs: string[]` |
 | `DrugInteractionsCard.tsx` | Flag drug-food risks | `interactions: Interaction[]` |
 | `AlertFeed.tsx` | Live alert stream | RTDB subscription on `/dashboard/{uid}/alerts` |
 | `MisinfoChecker.tsx` | Textarea + verdict card | `verdict, explanation, sources` |
 | `MealHistory.tsx` | Scrollable past meals | Firestore listener on `patients/{uid}/meals` |
 | `GlucoseInsightCard.tsx` | Trigger food insight | `insight: {headline, severity, action}` |
+| `WeeklyReportCard.tsx` | Patient-triggered weekly PDF report generation. Shows checklist of report contents, triggers `POST /api/v1/reports/weekly`, shows PDF download link on success. | internal state; calls `api.generateReport()` |
 
 ### Dietitian Components
 

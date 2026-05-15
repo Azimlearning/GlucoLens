@@ -24,17 +24,48 @@ export interface PatientProfile {
 
 export type TrafficLight = "green" | "amber" | "red"
 
+export type MealType = "breakfast" | "lunch" | "dinner" | "snack" | "unspecified"
+
 export interface MealRecord {
   meal_id: string
   patient_id: string
   timestamp: string
   name: string
+  meal_type?: MealType
   traffic_light: TrafficLight
   calories: number
   carbs_g: number
+  risk_score?: number
   meal_risk_score: number
   swap_suggestions?: SwapSuggestion[]
   nutrition_breakdown?: NutritionItem[]
+  nutrition_totals?: {
+    calories_kcal: number
+    carbs_g: number
+    protein_g: number
+    fat_g: number
+    sodium_mg: number
+    glycemic_load: number
+    fiber_g?: number
+  }
+  meal_items?: Array<{
+    name: string
+    portion_g?: number
+    components?: string[]
+    nutrition_per_100g?: {
+      calories_kcal: number
+      carbs_g: number
+      protein_g: number
+      fat_g: number
+      fiber_g: number
+      sodium_mg: number
+    }
+    gi?: number
+    gl?: number
+    confidence?: number
+    allergens_triggered?: string[]
+    category?: string
+  }>
 }
 
 export interface NutritionItem {

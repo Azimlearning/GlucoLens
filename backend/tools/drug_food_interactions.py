@@ -1,53 +1,75 @@
-# Drug-food interaction matrix for common T2DM medications in Malaysia.
-# Keys are medication names (lowercase). Values list foods to avoid and the risk.
+"""
+Drug-food interaction matrix. Used by Agents 3 (Clinical) and 8 (Misinfo).
+
+Severity: "minor" | "moderate" | "high"
+Detection: substring match of `food` against the normalized food name OR claim entity.
+"""
 
 DRUG_FOOD_INTERACTIONS: dict[str, list[dict]] = {
     "metformin": [
-        {"food": "alcohol", "risk": "lactic acidosis risk", "severity": "high"},
-        {"food": "high-fat meal", "risk": "delayed absorption", "severity": "low"},
+        {"food": "alcohol", "severity": "moderate",
+         "note": "Increased risk of lactic acidosis when combined with alcohol."},
+        {"food": "grapefruit", "severity": "minor",
+         "note": "May modestly alter metformin levels."},
     ],
-    "glipizide": [
-        {"food": "alcohol", "risk": "severe hypoglycemia", "severity": "high"},
-        {"food": "grapefruit", "risk": "increased drug level", "severity": "medium"},
+    "gliclazide": [
+        {"food": "bitter_gourd", "severity": "moderate",
+         "note": "Additive hypoglycemic effect; risk of dangerously low blood sugar."},
+        {"food": "bitter_melon", "severity": "moderate",
+         "note": "Same as bitter gourd — additive hypoglycemic effect."},
+        {"food": "fenugreek", "severity": "moderate",
+         "note": "Additive hypoglycemic effect."},
+        {"food": "cinnamon_supplement", "severity": "minor",
+         "note": "May add to glucose-lowering effect at high doses."},
+        {"food": "alcohol", "severity": "moderate",
+         "note": "Increased risk of hypoglycemia and disulfiram-like reaction."},
+    ],
+    "gliclazide_mr": [
+        {"food": "bitter_gourd", "severity": "moderate",
+         "note": "Additive hypoglycemic effect."},
+        {"food": "alcohol", "severity": "moderate",
+         "note": "Increased risk of hypoglycemia."},
     ],
     "glibenclamide": [
-        {"food": "alcohol", "risk": "severe hypoglycemia", "severity": "high"},
-    ],
-    "sitagliptin": [
-        {"food": "alcohol", "risk": "hypoglycemia risk", "severity": "medium"},
-    ],
-    "empagliflozin": [
-        {"food": "alcohol", "risk": "dehydration and DKA risk", "severity": "high"},
-        {"food": "high-sugar drink", "risk": "reduced drug efficacy", "severity": "medium"},
-    ],
-    "dapagliflozin": [
-        {"food": "alcohol", "risk": "dehydration and DKA risk", "severity": "high"},
-    ],
-    "insulin": [
-        {"food": "alcohol", "risk": "severe hypoglycemia", "severity": "high"},
-        {"food": "high-carb meal without dose adjustment", "risk": "hyperglycemia", "severity": "medium"},
+        {"food": "bitter_gourd", "severity": "moderate", "note": "Additive hypoglycemic effect."},
+        {"food": "alcohol", "severity": "moderate", "note": "Risk of hypoglycemia."},
     ],
     "warfarin": [
-        {"food": "vitamin k rich foods", "risk": "reduced anticoagulation", "severity": "high"},
-        {"food": "grapefruit", "risk": "increased bleeding risk", "severity": "high"},
-        {"food": "alcohol", "risk": "increased bleeding risk", "severity": "high"},
+        {"food": "leafy_greens", "severity": "moderate",
+         "note": "High Vitamin K intake may antagonize warfarin's effect."},
+        {"food": "kale", "severity": "moderate", "note": "Antagonizes warfarin."},
+        {"food": "spinach", "severity": "moderate", "note": "Antagonizes warfarin."},
+        {"food": "cranberry", "severity": "moderate", "note": "May increase bleeding risk."},
     ],
-    "atorvastatin": [
-        {"food": "grapefruit", "risk": "increased statin level, myopathy risk", "severity": "high"},
-        {"food": "alcohol", "risk": "liver toxicity risk", "severity": "medium"},
+    "statin": [
+        {"food": "grapefruit", "severity": "high",
+         "note": "Inhibits CYP3A4; can raise statin levels and cause muscle damage."},
+        {"food": "grapefruit_juice", "severity": "high", "note": "Same as grapefruit."},
     ],
     "simvastatin": [
-        {"food": "grapefruit", "risk": "increased statin level, myopathy risk", "severity": "high"},
-        {"food": "alcohol", "risk": "liver toxicity risk", "severity": "medium"},
+        {"food": "grapefruit", "severity": "high", "note": "Significantly increases statin levels."},
+    ],
+    "atorvastatin": [
+        {"food": "grapefruit", "severity": "moderate", "note": "May increase statin levels."},
+    ],
+    "amlodipine": [
+        {"food": "grapefruit", "severity": "moderate", "note": "May increase amlodipine levels."},
+    ],
+    "insulin": [
+        {"food": "alcohol", "severity": "high",
+         "note": "Severe hypoglycemia risk, especially overnight."},
+        {"food": "bitter_gourd", "severity": "moderate",
+         "note": "Additive hypoglycemic effect."},
     ],
 }
 
-# Food keywords to check against (maps ingredient keywords to interaction triggers)
-FOOD_TRIGGER_KEYWORDS: dict[str, list[str]] = {
-    "alcohol": ["beer", "wine", "spirits", "alcohol", "toddy", "tuak"],
-    "grapefruit": ["grapefruit", "pomelo"],
-    "high-fat meal": ["fried", "lemak", "rendang", "goreng"],
-    "vitamin k rich foods": ["spinach", "bayam", "kale", "broccoli", "kangkung"],
-    "high-sugar drink": ["teh tarik", "milo", "sirap", "bandung", "sugarcane"],
-    "high-carb meal without dose adjustment": ["nasi", "rice", "bread", "roti", "mee", "pasta"],
-}
+
+def lookup_med_interactions(med_name: str) -> list[dict]:
+    """Look up interactions for a medication name (case-insensitive, normalised)."""
+    key = med_name.lower().strip().replace(" ", "_")
+    # Try direct match
+    if key in DRUG_FOOD_INTERACTIONS:
+        return DRUG_FOOD_INTERACTIONS[key]
+    # Try stripping dose/frequency suffixes (e.g. "metformin_1000mg_bd" -> "metformin")
+    base = key.split("_")[0]
+    return DRUG_FOOD_INTERACTIONS.get(base, [])
