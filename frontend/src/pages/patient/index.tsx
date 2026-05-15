@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute"
 import { MealUpload } from "@/components/patient/MealUpload"
 import { MealHistory } from "@/components/patient/MealHistory"
@@ -9,6 +8,7 @@ import { DashboardSummaryCard } from "@/components/patient/DashboardSummaryCard"
 import { WeeklyReportCard } from "@/components/patient/WeeklyReportCard"
 import { NutritionHistoryCard } from "@/components/patient/NutritionHistoryCard"
 import { GlucoseChartCard } from "@/components/patient/GlucoseChartCard"
+import { GlucoseSummaryChart } from "@/components/patient/GlucoseSummaryChart"
 import { AppointmentPrepCard } from "@/components/patient/AppointmentPrepCard"
 import { UserProfileCard } from "@/components/patient/UserProfileCard"
 import { useAuth } from "@/contexts/AuthContext"
@@ -16,7 +16,7 @@ import { Button } from "@/components/shared/Button"
 
 export default function PatientDashboard() {
   const { user, logout } = useAuth()
-  const [lang, setLang] = useState<"EN" | "BM">("EN")
+
 
   return (
     <ProtectedRoute requiredRole="patient">
@@ -38,31 +38,6 @@ export default function PatientDashboard() {
 
           {/* Controls */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Language toggle */}
-            <div className="flex rounded-md border border-gl-stone-200 overflow-hidden text-xs font-semibold">
-              <button
-                onClick={() => setLang("EN")}
-                className={`px-2.5 py-1.5 transition-colors duration-fast ${
-                  lang === "EN"
-                    ? "bg-brand-500 text-gl-bg"
-                    : "text-gl-stone-400 hover:bg-gl-stone-50"
-                }`}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setLang("BM")}
-                title="Bahasa Melayu (coming soon)"
-                className={`px-2.5 py-1.5 transition-colors duration-fast ${
-                  lang === "BM"
-                    ? "bg-brand-500 text-gl-bg"
-                    : "text-gl-stone-400 hover:bg-gl-stone-50"
-                }`}
-              >
-                BM
-              </button>
-            </div>
-
             <Button variant="secondary" size="sm" onClick={logout}>
               Sign Out
             </Button>
@@ -76,6 +51,7 @@ export default function PatientDashboard() {
           <MealUpload />
           <GlucoseLog />
           <GlucoseChartCard uid={user?.uid ?? ""} />
+          <GlucoseSummaryChart uid={user?.uid ?? ""} />
           <NutritionHistoryCard uid={user?.uid ?? ""} />
           <MealHistory />
           <MisinfoChecker />

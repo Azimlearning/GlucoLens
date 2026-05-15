@@ -144,8 +144,22 @@ def parse_json_safe(text: str, *, fallback: Any = None) -> Any:
 
 
 def chat_json(system: str, user: str, *, fallback: Any = None, **kwargs) -> Any:
-    """Convenience: chat_completion + parse_json_safe in one call. Forces JSON mode."""
+    """Convenience: chat_completion + parse_json_safe in one call. Forces JSON object mode.
+
+    Note: OpenAI's json_object mode cannot return a bare JSON array `[...]`.
+    Use `chat_json_array` when you expect a list as the top-level value.
+    """
     raw = chat_completion(system, user, response_format_json=True, **kwargs)
+    return parse_json_safe(raw, fallback=fallback)
+
+
+def chat_json_array(system: str, user: str, *, fallback: Any = None, **kwargs) -> Any:
+    """Like chat_json but does NOT set json_object mode, allowing bare array responses.
+
+    Use when the LLM is expected to return a JSON array `[...]` as the top-level value.
+    The json_object response_format would wrap arrays in an object and break parsing.
+    """
+    raw = chat_completion(system, user, response_format_json=False, **kwargs)
     return parse_json_safe(raw, fallback=fallback)
 
 

@@ -20,10 +20,11 @@ from __future__ import annotations
 
 from backend.models.state import GlucoLensState
 from backend.tools import openai_tools, firebase_tools
+from backend.tools.openai_tools import chat_json_array
 from backend.tools.drug_food_interactions import lookup_med_interactions
 from backend.tools.moh_guidelines import MOH_GUIDELINES
 from backend.tools.normalize import normalize_food_name, pct_over, pct_under
-from backend.tools.prompts import SWAP_SUGGESTION_PROMPT
+from backend.tools.prompts import SWAP_SUGGESTION_PROMPT, GLUCOLENS_SYSTEM_IDENTITY
 from backend.utils.cache import patient_profile_cache
 from backend.utils.logging import agent_logger
 
@@ -185,12 +186,18 @@ def generate_swap_suggestions(meal_items: list[dict], breaches: dict, profile: d
         language=profile.get("language_preference", "en"),
     )
 
+    meal_name = meal_items[0].get("name", "this meal") if meal_items else "this meal"
     fallback = [
-        "Consider reducing your rice portion by half.",
+        f"Consider reducing your portion of {meal_name}.",
         "You may want to pair this with a fiber-rich side like ulam or sayur kangkung.",
     ]
-    result = openai_tools.chat_json(
-        system="You output a strict JSON array of strings only.",
+    system = (
+        GLUCOLENS_SYSTEM_IDENTITY
+        + "\n\nYou output a strict JSON array of strings only. "
+        "No markdown, no prose, no wrapping object — just the array."
+    )
+    result = chat_json_array(
+        system=system,
         user=prompt,
         fallback=None,
     )

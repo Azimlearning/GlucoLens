@@ -105,9 +105,48 @@ function pickMotivation(riskScore: number): string {
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
-function scaleTotals(t: NutritionTotals, pct: number): Record<string, number> {
+// Per-swap nutrient adjustment — each checked swap applies a targeted reduction.
+// We parse the swap text for keywords to decide which nutrient to reduce.
+const SWAP_BENEFIT_PER_NUTRIENT: Record<string, Partial<Record<keyof NutritionTotals, number>>> = {
+  sodium:   { sodium_mg: 0.10 },
+  carb:     { carbs_g: 0.08, glycemic_load: 0.08 },
+  glycemic: { carbs_g: 0.06, glycemic_load: 0.10 },
+  oil:      { calories_kcal: 0.06, fat_g: 0.10 },
+  vegeta:   { fiber_g: 0.15, glycemic_load: 0.05 },
+  bean:     { fiber_g: 0.15, glycemic_load: 0.05, carbs_g: 0.05 },
+  protein:  { protein_g: 0.10 },
+  portion:  { calories_kcal: 0.08, carbs_g: 0.08, sodium_mg: 0.05 },
+  sauce:    { sodium_mg: 0.08 },
+  steam:    { calories_kcal: 0.08, fat_g: 0.12 },
+  lard:     { calories_kcal: 0.05, fat_g: 0.10, sodium_mg: 0.05 },
+}
+
+function swapReductionFactor(swap: string): Partial<Record<keyof NutritionTotals, number>> {
+  const lower = swap.toLowerCase()
+  const combined: Partial<Record<keyof NutritionTotals, number>> = {}
+  for (const [keyword, reductions] of Object.entries(SWAP_BENEFIT_PER_NUTRIENT)) {
+    if (lower.includes(keyword)) {
+      for (const [k, v] of Object.entries(reductions)) {
+        const key = k as keyof NutritionTotals
+        combined[key] = (combined[key] ?? 0) + (v as number)
+      }
+    }
+  }
+  // Default: generic 5% reduction across all if no keyword matched
+  if (Object.keys(combined).length === 0) {
+    return { calories_kcal: 0.05, carbs_g: 0.04, sodium_mg: 0.04 }
+  }
+  return combined
+}
+
+function scaleTotals(
+  t: NutritionTotals,
+  pct: number,
+  appliedSwapTexts: string[] = [],
+): Record<string, number> {
   const f = pct / 100
-  return {
+  // Start with portion-scaled values
+  const result: Record<string, number> = {
     calories_kcal: t.calories_kcal * f,
     carbs_g:       t.carbs_g       * f,
     protein_g:     t.protein_g     * f,
@@ -116,6 +155,23 @@ function scaleTotals(t: NutritionTotals, pct: number): Record<string, number> {
     glycemic_load: t.glycemic_load * f,
     fiber_g:       (t.fiber_g ?? 0) * f,
   }
+  // Apply cumulative swap reductions (capped at 40% total reduction per nutrient)
+  for (const swap of appliedSwapTexts) {
+    const reductions = swapReductionFactor(swap)
+    for (const [k, reduction] of Object.entries(reductions)) {
+      const key = k as keyof typeof result
+      if (key === "protein_g") {
+        // Protein swaps increase protein, not decrease
+        result[key] = result[key] * (1 + (reduction as number))
+      } else if (key === "fiber_g") {
+        result[key] = result[key] * (1 + (reduction as number))
+      } else {
+        result[key] = result[key] * (1 - (reduction as number))
+      }
+    }
+  }
+  // Round all values
+  return Object.fromEntries(Object.entries(result).map(([k, v]) => [k, parseFloat((v as number).toFixed(1))]))
 }
 
 function NutrientGrid({ t, pct }: { t: Record<string, number>; pct: number }) {
@@ -253,7 +309,7 @@ export function MealUpload() {
   const handleLogAdjusted = () => {
     if (!result) return
     const swaps = [...appliedSwaps].map((i) => result.recommendations[i]).filter(Boolean)
-    doConfirm(scaleTotals(result.nutrition_totals, portionPct), swaps)
+    doConfirm(scaleTotals(result.nutrition_totals, portionPct, swaps), swaps)
   }
 
   const toggleSwap = (i: number) => {
@@ -276,7 +332,15 @@ export function MealUpload() {
     setMealType(suggestMealType())
   }
 
-  const adjustedTotals = result ? scaleTotals(result.nutrition_totals, portionPct) : null
+  const adjustedTotals = result
+    ? scaleTotals(
+        result.nutrition_totals,
+        portionPct,
+        step === "adjusting" || step === "saving"
+          ? [...appliedSwaps].map((i) => result.recommendations[i]).filter(Boolean)
+          : [],
+      )
+    : null
 
   return (
     <Card>
