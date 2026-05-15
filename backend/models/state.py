@@ -1,89 +1,124 @@
-from typing import TypedDict, Optional, Any
+"""
+GlucoLensState — the canonical state object that flows through every LangGraph pipeline.
+
+Every agent reads its inputs from this state and returns a partial dict update.
+LangGraph merges the partials into the running state.
+
+Agents NEVER call each other directly. They communicate exclusively via state.
+"""
+from typing import TypedDict, Optional
 
 
 class GlucoLensState(TypedDict, total=False):
-    # Session
+    # === Event context ===
+    event_type: str          # "meal_upload" | "glucose_entry" | "misinformation_query" | "weekly_report" | "dashboard_load"
+    patient_id: str
+    user_id: str             # for dashboard_load; may differ from patient_id (dietitian case)
+    dietitian_id: Optional[str]
     session_id: str
-    event_type: str  # meal_upload | glucose_entry | misinformation_query | weekly_report | dashboard_load
-    user_id: str
-    user_role: str   # patient | dietitian
+    timestamp: str           # ISO8601 UTC
 
-    # Agent 1 — Vision
-    image_base64: str
-    recognized_items: list[dict]       # [{name, portion_g, confidence}]
-    unrecognized_flags: list[str]
+    # === Event-specific inputs ===
+    image_base64: Optional[str]
+    image_url: Optional[str]
+    meal_type: Optional[str]         # "breakfast" | "lunch" | "dinner" | "snack" | "unspecified"
+    glucose_value: Optional[float]
+    glucose_context: Optional[str]   # "pre_meal" | "post_meal" | "fasting" | "random"
+    raw_query: Optional[str]
 
-    # Agent 2 — Nutrition
-    nutrition_breakdown: list[dict]    # [{name, calories, carbs_g, protein_g, fat_g, gi, gl}]
-    meal_totals: dict                  # {calories, carbs_g, protein_g, fat_g, total_gl}
-    allergen_flags: list[str]
+    # === Agent 1 (Vision) outputs ===
+    meal_items: list[dict]
+    unrecognized_items: list[dict]
+    recognition_method: str
 
-    # Agent 3 — Clinical
-    patient_profile: dict
-    traffic_light: str                 # green | amber | red
-    swap_suggestions: list[dict]       # [{original, swap, reason}]
-    meal_risk_score: float
-    drug_interaction_flags: list[str]
-    clinical_notes: str
+    # === Agent 2 (Nutrition) outputs ===
+    nutrition_totals: dict
+    nutrition_per_item: list[dict]
+    data_source: str
 
-    # Agent 4 — Glucose
-    glucose_readings: list[dict]       # [{timestamp, value_mmol, meal_id}]
-    glucose_insight: dict              # {trend, trigger_foods, vs_population}
+    # === Agent 3 (Clinical) outputs ===
+    traffic_light: dict
+    risk_score: int
+    recommendations: list[str]
+    drug_interactions: list[dict]
 
-    # Agent 5 — Alert
-    alerts: list[dict]                 # [{type, severity, message, timestamp}]
-    alert_ids: list[str]
+    # === Agent 4 (Glucose) outputs ===
+    glucose_insights: list[dict]
 
-    # Agent 6 — Report
-    report_url: str
-    week_summary: dict
+    # === Agent 5 (Alert) outputs ===
+    alerts: list[dict]
 
-    # Agent 7 — Dashboard
-    patient_view: dict
-    dietitian_view: dict
-    realtime_pushed: bool
+    # === Agent 6 (Report) outputs ===
+    pdf_url: str
 
-    # Agent 8 — Misinfo
-    claim_text: str
-    verdict: str                       # safe | caution | harmful_for_you | insufficient_evidence
-    evidence_summary: str
-    misinfo_sources: list[str]
+    # === Agent 7 (Dashboard) outputs ===
+    dashboard_payload: dict
+    view_role: str
 
-    # Cross-agent
-    meal_id: str
-    errors: list[dict]                 # [{agent, error}]
+    # === Agent 8 (Misinfo) outputs ===
+    verdict: str
+    verdict_explanation: str
+    disclaimer: str
+    logged_for_dietitian: bool
+    evidence_sources: list[dict]
+
+    # === Metadata ===
+    errors: list[dict]
+    cached: bool
 
 
 EMPTY_STATE: GlucoLensState = {
-    "session_id": "",
     "event_type": "",
+    "patient_id": "",
     "user_id": "",
-    "user_role": "",
-    "image_base64": "",
-    "recognized_items": [],
-    "unrecognized_flags": [],
-    "nutrition_breakdown": [],
-    "meal_totals": {},
-    "allergen_flags": [],
-    "patient_profile": {},
-    "traffic_light": "",
-    "swap_suggestions": [],
-    "meal_risk_score": 0.0,
-    "drug_interaction_flags": [],
-    "clinical_notes": "",
-    "glucose_readings": [],
-    "glucose_insight": {},
+    "dietitian_id": None,
+    "session_id": "",
+    "timestamp": "",
+    "image_base64": None,
+    "image_url": None,
+    "meal_type": None,
+    "glucose_value": None,
+    "glucose_context": None,
+    "raw_query": None,
+    "meal_items": [],
+    "unrecognized_items": [],
+    "recognition_method": "",
+    "nutrition_totals": {},
+    "nutrition_per_item": [],
+    "data_source": "",
+    "traffic_light": {},
+    "risk_score": 0,
+    "recommendations": [],
+    "drug_interactions": [],
+    "glucose_insights": [],
     "alerts": [],
-    "alert_ids": [],
-    "report_url": "",
-    "week_summary": {},
-    "patient_view": {},
-    "dietitian_view": {},
-    "realtime_pushed": False,
-    "claim_text": "",
+    "pdf_url": "",
+    "dashboard_payload": {},
+    "view_role": "",
     "verdict": "",
-    "evidence_summary": "",
-    "misinfo_sources": [],
-    "meal_id": "",
+    "verdict_explanation": "",
+    "disclaimer": "",
+    "logged_for_dietitian": False,
+    "evidence_sources": [],
     "errors": [],
+    "cached": False,
+}
+
+
+# Allowed event types — used by orchestrator for validation.
+EVENT_TYPES = (
+    "meal_upload",
+    "glucose_entry",
+    "misinformation_query",
+    "weekly_report",
+    "dashboard_load",
+)
+
+# Required payload keys per event — used by orchestrator.classify_event.
+EVENT_REQUIREMENTS: dict[str, list[str]] = {
+    "meal_upload":          ["patient_id", "image_base64"],
+    "glucose_entry":        ["patient_id", "glucose_value"],
+    "misinformation_query": ["patient_id", "raw_query"],
+    "weekly_report":        ["patient_id"],
+    "dashboard_load":       ["user_id"],
 }

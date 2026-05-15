@@ -16,13 +16,17 @@ async def log_glucose(body: GlucoseEntryRequest, user: dict = Depends(verify_fir
     timestamp = body.timestamp or datetime.now(timezone.utc).isoformat()
     result = await run_pipeline("glucose_entry", {
         "session_id": session_id,
+        "patient_id": uid,
         "user_id": uid,
-        "glucose_readings": [{"value_mmol": body.value_mmol, "timestamp": timestamp, "meal_id": body.meal_id or ""}],
+        "glucose_value": body.glucose_value,
+        "glucose_context": body.context,
+        "timestamp": timestamp,
     })
-    if result.get("errors"):
-        return GlucoseEntryResponse(success=False, error=str(result["errors"]))
+    errors = result.get("errors") or []
     return GlucoseEntryResponse(
-        success=True,
-        insight=result.get("glucose_insight"),
-        alerts=result.get("alerts"),
+        success=len(errors) == 0,
+        session_id=result.get("session_id") or session_id,
+        glucose_insights=result.get("glucose_insights") or [],
+        alerts=result.get("alerts") or [],
+        errors=errors,
     )

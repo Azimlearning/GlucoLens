@@ -32,9 +32,9 @@ export default function LoginPage() {
     }
   }
 
-  const fillDemo = (role: "patient" | "dietitian") => {
-    setEmail(DEMO_USERS[role].email)
-    setPassword(DEMO_USERS[role].password)
+  const fillDemo = (key: keyof typeof DEMO_USERS) => {
+    setEmail(DEMO_USERS[key].email)
+    setPassword(DEMO_USERS[key].password)
   }
 
   return (
@@ -76,15 +76,19 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 border-t border-slate-100 pt-4">
-            <p className="text-xs text-slate-400 text-center mb-3">Demo accounts</p>
-            <div className="flex gap-2">
-              <button onClick={() => fillDemo("patient")} className="flex-1 text-xs rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-colors">
-                Patient (Rahman)
-              </button>
-              <button onClick={() => fillDemo("dietitian")} className="flex-1 text-xs rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-colors">
-                Dietitian (Aisyah)
-              </button>
+            <p className="text-xs text-slate-400 text-center mb-3">Try a demo account</p>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.entries(DEMO_USERS) as [keyof typeof DEMO_USERS, { name: string }][]).map(([key, u]) => (
+                <button
+                  key={key}
+                  onClick={() => fillDemo(key)}
+                  className="text-xs rounded-lg border border-slate-200 px-2 py-2 hover:bg-slate-50 transition-colors text-slate-600 leading-tight"
+                >
+                  {u.name}
+                </button>
+              ))}
             </div>
+            <p className="text-xs text-slate-300 text-center mt-2">All use password: demo123</p>
           </div>
         </div>
       </div>

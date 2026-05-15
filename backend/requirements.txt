@@ -1,6 +1,6 @@
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
-pydantic==2.7.1
+pydantic==2.7.4
 pydantic-settings==2.2.1
 python-dotenv==1.0.1
 
@@ -8,7 +8,7 @@ python-dotenv==1.0.1
 langgraph==0.2.16
 langchain==0.2.6
 langchain-openai==0.1.8
-langchain-core==0.2.11
+langchain-core==0.2.27
 openai==1.30.5
 
 # Firebase

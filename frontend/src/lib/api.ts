@@ -14,21 +14,51 @@ apiClient.interceptors.request.use(async (config) => {
   return config
 })
 
-export const api = {
-  uploadMeal: (imageBase64: string) =>
-    apiClient.post("/meals/upload", { image_base64: imageBase64 }),
+// On 401, sign out and redirect to login
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error?.response?.status === 401) {
+      await auth.signOut()
+      window.location.href = "/"
+    }
+    return Promise.reject(error)
+  }
+)
 
-  logGlucose: (valueMmol: number, timestamp?: string, mealId?: string) =>
-    apiClient.post("/glucose/entry", { value_mmol: valueMmol, timestamp, meal_id: mealId }),
+export const api = {
+  uploadMeal: (imageBase64: string, mealType?: string) =>
+    apiClient.post("/meals/upload", { image_base64: imageBase64, meal_type: mealType ?? "unspecified" }),
+
+  getMeal: (mealId: string) =>
+    apiClient.get(`/meals/${mealId}`),
+
+  deleteMeal: (mealId: string) =>
+    apiClient.delete(`/meals/${mealId}`),
+
+  logGlucose: (valueMmol: number, timestamp?: string, context?: string) =>
+    apiClient.post("/glucose/entry", { glucose_value: valueMmol, timestamp, context: context ?? "random" }),
 
   checkMisinfo: (claimText: string) =>
-    apiClient.post("/misinfo/check", { claim_text: claimText }),
+    apiClient.post("/misinfo/check", { raw_query: claimText }),
 
   generateReport: () =>
     apiClient.post("/reports/weekly", {}),
 
+  downloadReport: () =>
+    apiClient.get("/reports/download", { responseType: "blob" }),
+
+  generateReportForPatient: (patientId: string) =>
+    apiClient.post(`/reports/weekly/${patientId}`),
+
+  downloadReportForPatient: (patientId: string) =>
+    apiClient.get(`/reports/download/${patientId}`, { responseType: "blob" }),
+
   getDashboard: (patientId?: string) =>
     apiClient.get("/dashboard/", { params: patientId ? { patient_id: patientId } : {} }),
+
+  getMeetingPlan: (patientId: string) =>
+    apiClient.post(`/scheduling/meeting-plan/${patientId}`),
 }
 
 export default apiClient

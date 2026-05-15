@@ -1,37 +1,73 @@
+"""
+Pydantic response models. Shapes mirror what agents produce.
+"""
 from pydantic import BaseModel
-from typing import Optional, Any
 
 
-class BaseResponse(BaseModel):
-    success: bool
-    data: Optional[Any] = None
-    error: Optional[str] = None
+class TrafficLight(BaseModel):
+    carbs: str = "green"
+    gl: str = "green"
+    sodium: str = "green"
+    protein: str = "green"
 
 
-class MealUploadResponse(BaseResponse):
-    meal_id: Optional[str] = None
-    traffic_light: Optional[str] = None
-    meal_totals: Optional[dict] = None
-    swap_suggestions: Optional[list] = None
-    alerts: Optional[list] = None
+class NutritionTotals(BaseModel):
+    calories_kcal: float = 0
+    carbs_g: float = 0
+    protein_g: float = 0
+    fat_g: float = 0
+    fiber_g: float = 0
+    sodium_mg: float = 0
+    glycemic_load: float = 0
 
 
-class GlucoseEntryResponse(BaseResponse):
-    reading_id: Optional[str] = None
-    insight: Optional[dict] = None
-    alerts: Optional[list] = None
+class MealUploadResponse(BaseModel):
+    success: bool = True
+    session_id: str = ""
+    meal_items: list[dict] = []
+    nutrition_totals: NutritionTotals = NutritionTotals()
+    traffic_light: TrafficLight = TrafficLight()
+    risk_score: int = 0
+    recommendations: list[str] = []
+    drug_interactions: list[dict] = []
+    alerts: list[dict] = []
+    dashboard_payload: dict = {}
+    errors: list[dict] = []
 
 
-class MisinfoQueryResponse(BaseResponse):
-    verdict: Optional[str] = None
-    evidence_summary: Optional[str] = None
-    sources: Optional[list] = None
+class MisinfoResponse(BaseModel):
+    success: bool = True
+    session_id: str = ""
+    verdict: str = ""
+    verdict_explanation: str = ""
+    disclaimer: str = ""
+    evidence_sources: list[dict] = []
+    errors: list[dict] = []
 
 
-class WeeklyReportResponse(BaseResponse):
-    report_url: Optional[str] = None
-    week_summary: Optional[dict] = None
+class WeeklyReportResponse(BaseModel):
+    success: bool = True
+    session_id: str = ""
+    pdf_url: str = ""
+    errors: list[dict] = []
 
 
-class DashboardResponse(BaseResponse):
-    view: Optional[dict] = None
+class DashboardResponse(BaseModel):
+    success: bool = True
+    session_id: str = ""
+    dashboard_payload: dict = {}
+    view_role: str = "patient"
+    errors: list[dict] = []
+
+
+class GlucoseEntryResponse(BaseModel):
+    success: bool = True
+    session_id: str = ""
+    glucose_insights: list[dict] = []
+    alerts: list[dict] = []
+    errors: list[dict] = []
+
+
+class HealthResponse(BaseModel):
+    status: str = "ok"
+    version: str = "1.0.0"

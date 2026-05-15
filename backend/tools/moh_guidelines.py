@@ -1,51 +1,44 @@
-# MOH Malaysia Clinical Practice Guidelines for Type 2 Diabetes (2020 edition)
-# Reference: CPG Management of Type 2 Diabetes Mellitus (6th Ed, 2020)
+"""
+MOH Malaysia dietary guidelines used by Agent 3 for recommendation context,
+plus category-default Glycemic Index values used by Agent 2 as a fallback.
+"""
 
-MOH_GUIDELINES: dict = {
-    "daily_targets": {
-        "calories_kcal": {"min": 1500, "max": 2000, "note": "Adjust for BMI and activity"},
-        "carbs_percent": {"min": 45, "max": 60, "note": "% of total energy"},
-        "carbs_g_per_meal": {"max": 60, "note": "Per main meal"},
-        "protein_percent": {"min": 15, "max": 20},
-        "fat_percent": {"max": 35},
-        "saturated_fat_percent": {"max": 7},
-        "fibre_g": {"min": 20, "max": 30},
-        "sodium_mg": {"max": 2000},
+MOH_GUIDELINES: dict[str, dict[str, str]] = {
+    "carbs": {
+        "source": "MOH Malaysia CPG Diabetes 2020",
+        "recommendation": "≤45g carbohydrate per main meal for stable T2DM control.",
     },
-    "glycemic_targets": {
-        "fasting_mmol": {"target": 4.4, "max": 7.0},
-        "post_meal_2h_mmol": {"target": 7.8, "max": 10.0},
-        "hba1c_percent": {"target": 6.5, "max": 8.0},
+    "gl": {
+        "source": "MOH Malaysia CPG Diabetes 2020",
+        "recommendation": "Meal Glycemic Load ≤15 for optimal post-prandial glucose control.",
     },
-    "traffic_light_thresholds": {
-        "meal_gl": {
-            "green": {"max": 10},
-            "amber": {"min": 10, "max": 20},
-            "red": {"min": 20},
-        },
-        "meal_carbs_g": {
-            "green": {"max": 45},
-            "amber": {"min": 45, "max": 60},
-            "red": {"min": 60},
-        },
-        "meal_calories_kcal": {
-            "green": {"max": 500},
-            "amber": {"min": 500, "max": 700},
-            "red": {"min": 700},
-        },
+    "sodium": {
+        "source": "MOH Malaysia Salt Reduction Strategy 2015",
+        "recommendation": "Daily sodium ≤2000mg; per meal ≤600mg.",
     },
-    "alert_thresholds": {
-        "glucose_hypo_mmol": 4.0,
-        "glucose_hyper_mmol": 10.0,
-        "glucose_critical_high_mmol": 14.0,
-        "meal_risk_score_alert": 7.0,
+    "protein": {
+        "source": "MyDRI 2017 (Malaysian Dietary Reference Intakes)",
+        "recommendation": "Older T2DM adults: 1.0-1.2 g/kg/day protein intake.",
     },
-    "recommended_foods": [
-        "Brown rice", "Oats", "Whole grain bread", "Vegetables", "Legumes",
-        "Fish", "Chicken (skinless)", "Low-fat dairy", "Fruits (low GI)",
-    ],
-    "foods_to_limit": [
-        "White rice (large portions)", "Sugary drinks", "Fried foods",
-        "Processed meats", "High-fat coconut milk dishes", "Pastries",
-    ],
+    "fiber": {
+        "source": "MyDRI 2017",
+        "recommendation": "≥25g dietary fiber per day for adults.",
+    },
+}
+
+
+GI_CATEGORY_DEFAULTS: dict[str, int] = {
+    "rice_dish":      73,
+    "noodle_dish":    65,
+    "bread":          70,
+    "protein_dish":   30,
+    "soup":           20,
+    "fried_snack":    65,
+    "snack":          55,
+    "kuih":           70,
+    "drink_sweet":    55,
+    "dessert":        65,
+    "vegetable":      30,
+    "fruit":          50,
+    "unknown":        65,
 }

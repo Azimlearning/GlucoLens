@@ -208,18 +208,23 @@ frontend/
     │   │   └── LogoutButton.tsx
     │   │
     │   ├── patient/
-    │   │   ├── MealUpload.tsx       # Drag-and-drop + camera. Calls /api/v1/meal/upload.
-    │   │   ├── AgentStatusTicker.tsx # Live progress bar with ✓/⏳ per agent.
-    │   │   ├── TrafficLight.tsx     # 🟢/🟡/🔴 grid for 4 nutrients.
-    │   │   ├── MealBreakdown.tsx    # Per-item nutrition table.
+    │   │   ├── MealUpload.tsx           # Drag-and-drop + camera. Calls /api/v1/meals/upload.
+    │   │   │                            # Shows image preview, ingredient breakdown, 6-macro totals.
+    │   │   ├── IngredientBreakdown.tsx  # Per-item card: components chips + macro bars + sodium.
+    │   │   ├── AgentStatusTicker.tsx    # Live progress bar with ✓/⏳ per agent.
+    │   │   ├── TrafficLight.tsx         # 🟢/🟡/🔴 grid for 4 nutrients.
+    │   │   ├── MealBreakdown.tsx        # Per-item nutrition table (used in MealHistory).
     │   │   ├── RecommendationsList.tsx
     │   │   ├── DrugInteractionsCard.tsx
-    │   │   ├── AlertFeed.tsx        # RTDB-subscribed live alert list.
-    │   │   ├── MisinfoChecker.tsx   # Textarea + verdict card.
-    │   │   ├── VerdictCard.tsx      # Verdict + explanation + sources.
-    │   │   ├── MealHistory.tsx      # Scrollable list with thumbnails.
-    │   │   ├── MealCard.tsx         # Single meal row (used in history).
-    │   │   └── GlucoseInsightCard.tsx
+    │   │   ├── AlertFeed.tsx            # RTDB-subscribed live alert list.
+    │   │   ├── MisinfoChecker.tsx       # Textarea + verdict card.
+    │   │   ├── VerdictCard.tsx          # Verdict + explanation + sources.
+    │   │   ├── MealHistory.tsx          # Scrollable list with thumbnails.
+    │   │   ├── MealCard.tsx             # Single meal row (used in history).
+    │   │   ├── GlucoseInsightCard.tsx
+    │   │   ├── DashboardSummaryCard.tsx # Greeting + avg glucose + meal count + AI summary.
+    │   │   │                            # Shown at top of patient dashboard on every visit.
+    │   │   └── WeeklyReportCard.tsx     # Trigger weekly PDF report generation; show download link.
     │   │
     │   ├── dietitian/
     │   │   ├── CaseloadTable.tsx    # Sorted by risk score.

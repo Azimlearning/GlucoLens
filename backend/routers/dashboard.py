@@ -14,15 +14,16 @@ async def get_dashboard(
 ):
     uid = user["uid"]
     session_id = str(uuid.uuid4())
-    # Dietitians may request a specific patient; patients always get their own
-    target_patient = patient_id if patient_id and user.get("role") == "dietitian" else uid
     result = await run_pipeline("dashboard_load", {
         "session_id": session_id,
         "user_id": uid,
-        "patient_profile": {"uid": target_patient},
+        "patient_id": patient_id or uid,
     })
-    if result.get("errors"):
-        return DashboardResponse(success=False, error=str(result["errors"]))
-    role = user.get("role", "patient")
-    view = result.get("dietitian_view") if role == "dietitian" else result.get("patient_view")
-    return DashboardResponse(success=True, view=view)
+    errors = result.get("errors") or []
+    return DashboardResponse(
+        success=len(errors) == 0,
+        session_id=result.get("session_id") or session_id,
+        dashboard_payload=result.get("dashboard_payload") or {},
+        view_role=result.get("view_role") or "patient",
+        errors=errors,
+    )

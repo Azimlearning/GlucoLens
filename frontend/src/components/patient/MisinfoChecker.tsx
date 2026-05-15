@@ -11,7 +11,7 @@ const DISCLAIMER = "This is my suggestion based on available evidence — please
 export function MisinfoChecker() {
   const [claim, setClaim] = useState("")
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{ verdict: MisinfoVerdict; evidence_summary: string; sources: string[] } | null>(null)
+  const [result, setResult] = useState<{ verdict: MisinfoVerdict; verdict_explanation: string; evidence_sources: { title?: string; url?: string }[] } | null>(null)
   const [error, setError] = useState("")
 
   const handleCheck = async () => {
@@ -19,7 +19,7 @@ export function MisinfoChecker() {
     setLoading(true); setError(""); setResult(null)
     try {
       const { data } = await api.checkMisinfo(claim)
-      if (data.success) setResult({ verdict: data.verdict, evidence_summary: data.evidence_summary, sources: data.sources ?? [] })
+      if (data.success) setResult({ verdict: data.verdict, verdict_explanation: data.verdict_explanation, evidence_sources: data.evidence_sources ?? [] })
       else setError(data.error ?? "Check failed")
     } catch { setError("Failed to check claim.") }
     finally { setLoading(false) }
@@ -40,7 +40,7 @@ export function MisinfoChecker() {
             <span className="text-sm font-medium text-slate-600">Verdict:</span>
             <Badge label={VERDICT_LABELS[result.verdict]} className={VERDICT_COLORS[result.verdict]} />
           </div>
-          <p className="text-sm text-slate-700">{result.evidence_summary}</p>
+          <p className="text-sm text-slate-700">{result.verdict_explanation}</p>
           <p className="text-xs text-slate-400 italic border-t border-slate-100 pt-3">{DISCLAIMER}</p>
         </div>
       )}

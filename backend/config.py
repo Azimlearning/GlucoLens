@@ -1,37 +1,56 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field
+"""
+GlucoLens backend configuration.
+Loads environment variables into a typed Pydantic Settings object.
+Import the `settings` singleton from anywhere in the codebase.
+"""
+from functools import lru_cache
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_ENV_FILE = Path(__file__).parent / ".env"
 
 
 class Settings(BaseSettings):
-    # OpenAI
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
-    openai_model: str = Field("gpt-4o-2024-08-06", env="OPENAI_MODEL")
-    openai_vision_model: str = Field("gpt-4o", env="OPENAI_VISION_MODEL")
+    model_config = SettingsConfigDict(env_file=str(_ENV_FILE), env_file_encoding="utf-8", extra="ignore")
 
-    # Tavily
-    tavily_api_key: str = Field(..., env="TAVILY_API_KEY")
+    # === OpenAI ===
+    OPENAI_API_KEY: str
+    OPENAI_MODEL: str = "gpt-4o-2024-08-06"
+    OPENAI_VISION_MODEL: str = "gpt-4o"
+    OPENAI_TEMPERATURE: float = 0.1
+    OPENAI_TIMEOUT_S: int = 30
 
-    # Firebase Admin
-    firebase_project_id: str = Field(..., env="FIREBASE_PROJECT_ID")
-    firebase_private_key: str = Field(..., env="FIREBASE_PRIVATE_KEY")
-    firebase_client_email: str = Field(..., env="FIREBASE_CLIENT_EMAIL")
-    firebase_database_url: str = Field(..., env="FIREBASE_DATABASE_URL")
-    firebase_storage_bucket: str = Field(..., env="FIREBASE_STORAGE_BUCKET")
+    # === Tavily ===
+    TAVILY_API_KEY: str
 
-    # Feature flags
-    mydietcam_enabled: bool = Field(False, env="MYDIETCAM_ENABLED")
-    telegram_enabled: bool = Field(False, env="TELEGRAM_ENABLED")
-    email_enabled: bool = Field(False, env="EMAIL_ENABLED")
+    # === Firebase Admin ===
+    FIREBASE_PROJECT_ID: str
+    FIREBASE_PRIVATE_KEY: str
+    FIREBASE_CLIENT_EMAIL: str
+    FIREBASE_DATABASE_URL: str
+    FIREBASE_STORAGE_BUCKET: str = ""
 
-    # App config
-    app_env: str = Field("development", env="APP_ENV")
-    log_level: str = Field("INFO", env="LOG_LEVEL")
-    backend_url: str = Field("http://localhost:8000", env="BACKEND_URL")
-    frontend_url: str = Field("http://localhost:3000", env="FRONTEND_URL")
+    # === Feature flags ===
+    MYDIETCAM_ENABLED: bool = False
+    TELEGRAM_ENABLED: bool = False
+    EMAIL_ENABLED: bool = False
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # === App ===
+    APP_ENV: str = "development"
+    LOG_LEVEL: str = "INFO"
+    BACKEND_URL: str = "http://localhost:8000"
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # === Pipeline ===
+    AGENT_NODE_TIMEOUT_S: int = 20
+    PIPELINE_TIMEOUT_S: int = 45
+    PIPELINE_RECURSION_LIMIT: int = 12
 
 
-settings = Settings()
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
+
+
+# Convenience: most modules just import this.
+settings = get_settings()

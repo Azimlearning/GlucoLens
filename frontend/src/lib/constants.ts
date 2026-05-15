@@ -27,6 +27,7 @@ export const VERDICT_LABELS: Record<string, string> = {
 }
 
 export const DEMO_USERS = {
-  patient: { email: "rahman@demo.com", password: "demo123" },
-  dietitian: { email: "aisyah@demo.com", password: "demo123" },
+  patient:   { email: "rahman@demo.com",  password: "demo123", name: "Rahman (Patient)" },
+  dietitian: { email: "aisyah@demo.com",  password: "demo123", name: "Aisyah (Dietitian)" },
+  demo:      { email: "meiling@demo.com", password: "demo123", name: "Mei Ling (New User)" },
 }

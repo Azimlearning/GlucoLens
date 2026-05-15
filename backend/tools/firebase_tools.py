@@ -1,84 +1,144 @@
+"""
+Firebase Admin SDK wrapper.
+
+Initializes once on import. Exposes:
+  - firestore_client()  -> firestore.Client
+  - rtdb_ref(path)      -> db.Reference
+  - storage_bucket()    -> storage.Bucket
+  - verify_id_token(t)  -> dict (decoded token)
+
+All agent and router code should go through this module — never instantiate clients directly.
+"""
+from datetime import timedelta
+from typing import Any, Optional
+
 import firebase_admin
-from firebase_admin import credentials, firestore, auth, db, storage
+from firebase_admin import credentials, firestore, db as rtdb_module, storage, auth
+
 from backend.config import settings
-import structlog
+from backend.utils.logging import agent_logger
 
-log = structlog.get_logger(module="firebase_tools")
+log = agent_logger("firebase")
 
-_app = None
+_app: Optional[firebase_admin.App] = None
+_firestore_client: Optional[Any] = None
 
 
-def _get_app() -> firebase_admin.App:
+def _init_app() -> firebase_admin.App:
     global _app
-    if _app is None:
-        cred = credentials.Certificate({
-            "type": "service_account",
-            "project_id": settings.firebase_project_id,
-            "private_key": settings.firebase_private_key.replace("\n", "\n"),
-            "client_email": settings.firebase_client_email,
-            "token_uri": "https://oauth2.googleapis.com/token",
-        })
-        _app = firebase_admin.initialize_app(cred, {
-            "databaseURL": settings.firebase_database_url,
-            "storageBucket": settings.firebase_storage_bucket,
-        })
+    if _app is not None:
+        return _app
+    # Newlines in PEM keys can be escaped in .env — undo that.
+    private_key = settings.FIREBASE_PRIVATE_KEY.replace("\\n", "\n")
+    cred = credentials.Certificate({
+        "type": "service_account",
+        "project_id": settings.FIREBASE_PROJECT_ID,
+        "private_key": private_key,
+        "client_email": settings.FIREBASE_CLIENT_EMAIL,
+        "token_uri": "https://oauth2.googleapis.com/token",
+    })
+    app_options: dict = {"databaseURL": settings.FIREBASE_DATABASE_URL}
+    if settings.FIREBASE_STORAGE_BUCKET:
+        app_options["storageBucket"] = settings.FIREBASE_STORAGE_BUCKET
+    _app = firebase_admin.initialize_app(cred, app_options)
+    log.info("firebase_initialized", project=settings.FIREBASE_PROJECT_ID)
     return _app
 
 
 def firestore_client():
-    _get_app()
-    return firestore.client()
+    """Return a singleton Firestore client."""
+    global _firestore_client
+    _init_app()
+    if _firestore_client is None:
+        _firestore_client = firestore.client()
+    return _firestore_client
 
 
 def rtdb_ref(path: str):
-    _get_app()
-    return db.reference(path)
+    """Return a Realtime Database Reference at the given path."""
+    _init_app()
+    return rtdb_module.reference(path)
 
 
 def storage_bucket():
-    _get_app()
+    """Return the default Storage bucket."""
+    _init_app()
     return storage.bucket()
 
 
-def verify_token(id_token: str) -> dict | None:
+def verify_id_token(token: str) -> dict:
+    """Verify a Firebase Auth ID token. Returns the decoded token dict (uid, email, etc.)."""
+    _init_app()
+    return auth.verify_id_token(token)
+
+
+def verify_token(token: str) -> Optional[dict]:
+    """Alias for verify_id_token; returns None on failure instead of raising.
+    Used by middleware/auth.py for backward compatibility.
+    """
     try:
-        _get_app()
-        return auth.verify_id_token(id_token)
-    except Exception as e:
-        log.warning("token_verification_failed", error=str(e))
+        return verify_id_token(token)
+    except Exception:  # noqa: BLE001
         return None
 
 
-def firestore_get(collection: str, doc_id: str) -> dict | None:
-    doc = firestore_client().collection(collection).document(doc_id).get()
+# === High-level helpers used by agents ===
+
+def fetch_user(uid: str) -> Optional[dict]:
+    doc = firestore_client().collection("users").document(uid).get()
     return doc.to_dict() if doc.exists else None
 
 
-def firestore_set(collection: str, doc_id: str, data: dict) -> None:
-    firestore_client().collection(collection).document(doc_id).set(data)
+def fetch_patient_profile(patient_id: str) -> Optional[dict]:
+    doc = firestore_client().collection("patients").document(patient_id) \
+        .collection("profile").document("main").get()
+    return doc.to_dict() if doc.exists else None
 
 
-def firestore_update(collection: str, doc_id: str, data: dict) -> None:
-    firestore_client().collection(collection).document(doc_id).update(data)
+def write_patient_meal(patient_id: str, meal_id: str, payload: dict) -> None:
+    firestore_client().collection("patients").document(patient_id) \
+        .collection("meals").document(meal_id).set(payload)
 
 
-def firestore_add(collection: str, data: dict) -> str:
-    _, ref = firestore_client().collection(collection).add(data)
-    return ref.id
+def write_patient_alert(patient_id: str, alert_id: str, payload: dict) -> None:
+    firestore_client().collection("patients").document(patient_id) \
+        .collection("alerts").document(alert_id).set(payload)
 
 
-def rtdb_set(path: str, data: dict) -> None:
-    rtdb_ref(path).set(data)
+def write_misinfo_log(patient_id: str, query_id: str, payload: dict) -> None:
+    firestore_client().collection("patients").document(patient_id) \
+        .collection("misinfo_log").document(query_id).set(payload)
 
 
-def rtdb_push(path: str, data: dict) -> str:
-    ref = rtdb_ref(path).push(data)
-    return ref.key
+def write_audit_log(session_id: str, payload: dict) -> None:
+    firestore_client().collection("audit_logs").document(session_id).set(payload)
 
 
-def storage_upload(blob_path: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+def push_realtime(channel: str, payload: dict) -> None:
+    rtdb_ref(channel).set(payload)
+
+
+def push_realtime_child(channel: str, child_id: str, payload: dict) -> None:
+    rtdb_ref(f"{channel}/{child_id}").set(payload)
+
+
+def firestore_set(collection_path: str, document_id: str, data: dict) -> None:
+    """Write data to any Firestore path. collection_path may be nested, e.g. 'patients/uid/meals'."""
+    db = firestore_client()
+    parts = collection_path.strip("/").split("/")
+    ref = db
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            ref = ref.collection(part)
+        else:
+            ref = ref.document(part)
+    ref.document(document_id).set(data)
+
+
+def upload_bytes_to_storage(path: str, data: bytes, content_type: str,
+                            signed_url_days: int = 7) -> str:
     bucket = storage_bucket()
-    blob = bucket.blob(blob_path)
+    blob = bucket.blob(path)
     blob.upload_from_string(data, content_type=content_type)
-    blob.make_public()
-    return blob.public_url
+    return blob.generate_signed_url(
+        expiration=timedelta(days=signed_url_days), method="GET")
